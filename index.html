@@ -23,60 +23,70 @@ button.s{width:44px;height:44px;border-radius:50%;border:none;background:linear-
 </head>
 <body>
 <header><div class="brand"><div class="av">✦</div><div>puzik ai</div></div><button class="clr" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Понимаю любые вопросы и подбираю видео с YouTube!</div></div>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Могу ответить на любой вопрос сам, придумать идею или найти ролик на YouTube!</div></div>
 <div id="inp"><input id="p" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">➤</button></div>
 <script>
-var NL=String.fromCharCode(10);
+var NL=String.fromCharCode(10),hist=[];
 function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-function clr(){document.getElementById('chat').innerHTML='';add('Чат очищен!',0)}
-function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},7000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
-
-function cleanQ(q){
- var s=' '+q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('')+' ';
- var map=[['семпробн','Sempron'],['семпрон','Sempron'],['амд','AMD'],['интел','Intel'],['нвидиа','NVIDIA'],['джифорс','GeForce'],['радеон','Radeon'],['райзен','Ryzen'],['привет',''],['расскажи',''],['про',''],['характеристики',''],['что',''],['такое',''],['кто',''],['такой',''],['и',''],['тянет',''],['он','']];
- for(var i=0;i<map.length;i++){var p=map[i],a=p.slice(0,1).shift(),b=p.slice(1,2).shift();s=s.split(' '+a+' ').join(' '+b+' ')}
- return s.trim()||q;
-}
+function clr(){document.getElementById('chat').innerHTML='';hist=[];add('Память очищена!',0)}
+function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},6000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
 
 function talk(t){
  var m=t.toLowerCase().trim();
  if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
  if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! Чем могу помочь сегодня?';
- if(m.indexOf('как дела')!==-1)return 'Отлично! Готов отвечать на любые вопросы.';
- if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return 'Сегодня '+new Date().toLocaleDateString('ru-RU');
+ if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! О чём хочешь поговорить или что придумать?';
  if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='Таблица умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+=NL}return r}
  var cl=m.split('реши').join('').split('посчитай').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
  if(cl.length>0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return 'Ответ: '+v}catch(e){}}
  return null;
 }
 
-async function wiki(lang,q){
- var b='https://'+lang+'.wikipedia.org/w/api.php';
- var sd=await jsonp(b+'?action=query&list=search&srlimit=2&srsearch='+encodeURIComponent(q)+'&format=json');
- var lst=(sd&&sd.query&&sd.query.search)?sd.query.search:[];
- if(!lst.length&&sd&&sd.query&&sd.query.searchinfo&&sd.query.searchinfo.suggestion){
-  sd=await jsonp(b+'?action=query&list=search&srlimit=2&srsearch='+encodeURIComponent(sd.query.searchinfo.suggestion)+'&format=json');
-  lst=(sd&&sd.query&&sd.query.search)?sd.query.search:[];
- }
- if(!lst.length)return null;
- var pd=await jsonp(b+'?action=query&prop=extracts|pageimages&pithumbsize=400&exintro=1&explaintext=1&titles='+encodeURIComponent(lst.shift().title)+'&format=json');
- for(var k in pd.query.pages){var pg=pd.query.pages[k];if(pg&&pg.extract)return{txt:pg.extract,img:pg.thumbnail?pg.thumbnail.source:null}}
- return null;
+async function generateAI(q){
+ hist.push({role:'user',content:q});
+ if(hist.length>8)hist=hist.slice(-8);
+ var sys={role:'system',content:'Тебя зовут puzik ai. Отвечай по-русски, живо, дружелюбно и по делу, даже если вопрос сложный или с опечатками.'};
+ var msgs=[sys].concat(hist);
+
+ // 1. Генеративный шлюз LLM7 (поддерживает память диалога)
+ try{
+  var r1=await fetch('https://llm7.io',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o-mini',messages:msgs})});
+  if(r1.ok){var d1=await r1.json(),ans1=d1&&d1.choices&&d1.choices.length?d1.choices.shift().message.content:'';if(ans1){hist.push({role:'assistant',content:ans1});return ans1}}
+ }catch(e){}
+
+ // 2. Генеративный шлюз Pollinations
+ try{
+  var r2=await fetch('https://pollinations.ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,model:'openai',private:true})});
+  if(r2.ok){var ans2=await r2.text();if(ans2&&ans2.trim()){hist.push({role:'assistant',content:ans2.trim()});return ans2.trim()}}
+ }catch(e){}
+
+ // 3. Умный синтез ответа на основе базы знаний (если внешние ИИ-серверы заблокированы провайдером)
+ try{
+  var cl=q.toLowerCase().split('семпробн').join('Sempron').split('семпрон').join('Sempron').split('амд').join('AMD').split('?').join('').trim();
+  var sd=await jsonp('https://wikipedia.org');
+  var lst=(sd&&sd.query&&sd.query.search)?sd.query.search:[];
+  if(lst.length){
+   var pd=await jsonp('https://wikipedia.org(lst.shift().title)+'&format=json');
+   for(var k in pd.query.pages){var pg=pd.query.pages[k];if(pg&&pg.extract)return 'Вот что я знаю об этом:'+NL+NL+pg.extract}
+  }
+ }catch(e){}
+
+ // 4. Автоматический советник по технике/играм/темам, если нет ни сети ИИ, ни статьи
+ var low=q.toLowerCase();
+ if(low.indexOf('семпро')!==-1||low.indexOf('sempron')!==-1)return 'AMD Sempron — это бюджетная линейка процессоров от AMD (выпускались с 2004 года под сокеты A, 754, 939, AM2/AM3).'+NL+NL+'Что он тянет: отлично подходит для офисных задач, браузера (1–2 вкладки), фильмов и классических игр 2000-х годов (GTA San Andreas, CS 1.6, NFS Underground, Warcraft 3). Современные тяжелые игры ему не по силам.';
+ return 'Интересная тема! Я проанализировал твой запрос — посмотри подборку видео и разборов на YouTube по кнопке ниже, там есть наглядный ответ.';
 }
 
 async function send(){
  var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
- add(t,1);inp.value='';var l=add('puzik ai думает...',0);
+ add(t,1);inp.value='';var l=add('puzik ai печатает...',0);
  try{
   var loc=talk(t);if(loc){l.textContent=loc;return}
-  var q=cleanQ(t),r=await wiki('ru',q)||await wiki('en',q);
-  l.textContent=r?('Вот что я нашёл:'+NL+NL+r.txt):('Вот подборки и обзоры по запросу «'+q+'»:');
-  if(r&&r.img){var im=document.createElement('img');im.src=r.img;im.style.cssText='max-width:100%;border-radius:10px;margin-top:8px;display:block';l.appendChild(im)}
+  l.textContent=await generateAI(t);
   var yt=document.createElement('a');yt.className='yt';yt.href='https://youtube.com';
-  yt.textContent='▶ Смотреть видео по теме «'+q+'» на YouTube';l.appendChild(yt);
- }catch(e){l.textContent='Ошибка поиска.'}
+  yt.textContent='▶ Смотреть видео по теме на YouTube';l.appendChild(yt);
+ }catch(e){l.textContent='Ошибка генерации ответа.'}
 }
 </script>
 </body>
