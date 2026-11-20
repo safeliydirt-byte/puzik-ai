@@ -17,10 +17,10 @@ button{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#f
 </style>
 </head>
 <body>
-<header>🤖 puzik ai v2</header>
+<header>🤖 puzik ai v3</header>
 <div id="chat"></div>
 <div id="inp">
-    <input id="p" type="text" placeholder="Задай вопрос или задачу..." onkeydown="if(event.key==='Enter')send()">
+    <input id="p" type="text" placeholder="Задай вопрос, новость или задачу..." onkeydown="if(event.key==='Enter')send()">
     <button id="btn" type="button" onclick="send()">Отпр.</button>
 </div>
 <script>
@@ -113,8 +113,49 @@ function localReply(t) {
 
 async function webSearch(q) {
     var out = [];
-    var sq = (q.length > 25 && /\d/.test(q)) ? q + ' решение ответ' : q;
+    var low = q.toLowerCase();
+
+    // 1. Если просят новости — подтягиваем свежие новости через Google News RSS -> JSON
+    if (low.indexOf('новост') !== -1) {
+        try {
+            var newsTopic = q.replace(/новости\s*(про|о|об)?/gi, '').trim() || 'Беларусь';
+            var rssUrl = 'https://google.com' + encodeURIComponent(newsTopic) + '&hl=ru&gl=BY&ceid=BY:ru';
+            var nr = await fetch('https://rss2json.com' + encodeURIComponent(rssUrl));
+            if (nr.ok) {
+                var nd = await nr.json();
+                if (nd && nd.items && nd.items.length > 0) {
+                    var newsLines = ['📰 Свежие новости по теме «' + newsTopic + '»:'];
+                    for (var k = 0; k < Math.min(4, nd.items.length); k++) {
+                        newsLines.push('• ' + nd.items.item(k).title);
+                    }
+                    out.push(newsLines.join('\n'));
+                }
+            }
+        } catch (e) {}
+    }
+
+    // 2. Поиск энциклопедической справки (очищаем вопрос от лишних слов)
     try {
+        var cl = q
+            .replace(/^(что такое|кто такой|кто такая|расскажи про|найди|новости про|новости|основание|история|когда основан)\s+/gi, '')
+            .replace(/[?!.]+$/, '')
+            .trim();
+
+        var wr = await fetch('https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&origin=*');
+        var wd = await wr.json();
+        var hit = (wd && wd.query && wd.query.search && wd.query.search.length > 0) ? wd.query.search.shift() : null;
+        if (hit) {
+            var sr = await fetch('https://wikipedia.org' + encodeURIComponent(hit.title));
+            if (sr.ok) {
+                var sd = await sr.json();
+                if (sd.extract) out.push('📖 ' + sd.title + ':\n' + sd.extract);
+            }
+        }
+    } catch (e) {}
+
+    // 3. Общий веб-поиск по интернету
+    try {
+        var sq = (q.length > 25 && /\d/.test(q)) ? q + ' решение ответ' : q;
         var r = await fetch('https://allorigins.win' + encodeURIComponent('https://duckduckgo.com' + encodeURIComponent(sq)));
         if (r.ok) {
             var j = await r.json();
@@ -122,7 +163,7 @@ async function webSearch(q) {
                 var doc = new DOMParser().parseFromString(j.contents, 'text/html');
                 var sn = doc.querySelectorAll('.result-snippet');
                 var lk = doc.querySelectorAll('.result-link');
-                for (var i = 0; i < Math.min(3, sn.length); i++) {
+                for (var i = 0; i < Math.min(2, sn.length); i++) {
                     var tt = lk.item(i) ? lk.item(i).textContent.trim() : '';
                     var tx = sn.item(i).textContent.trim();
                     if (tx) out.push('🔹 ' + tt + '\n' + tx);
@@ -131,21 +172,7 @@ async function webSearch(q) {
         }
     } catch (e) {}
 
-    try {
-        var cl = q.replace(/^(что такое|кто такой|кто такая|расскажи про|найди)\s+/i, '').replace(/[?!.]+$/, '').trim();
-        var wr = await fetch('https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&origin=*');
-        var wd = await wr.json();
-        var hit = (wd && wd.query && wd.query.search && wd.query.search.length > 0) ? wd.query.search.shift() : null;
-        if (hit) {
-            var sr = await fetch('https://wikipedia.org' + encodeURIComponent(hit.title));
-            if (sr.ok) {
-                var sd = await sr.json();
-                if (sd.extract) out.unshift('📖 ' + sd.title + ':\n' + sd.extract);
-            }
-        }
-    } catch (e) {}
-
-    return out.length ? '🌐 Нашёл в интернете:\n\n' + out.join('\n\n') : 'Ничего не нашлось. Попробуй написать проще!';
+    return out.length ? out.join('\n\n') : 'Ничего не нашлось. Попробуй написать ключевое слово проще (например: «Брест» или «новости Брест»)!';
 }
 
 async function send() {
@@ -160,7 +187,7 @@ async function send() {
         if (loc) {
             l.textContent = loc;
         } else if (t.toLowerCase() === 'привет') {
-            l.textContent = 'Привет! Я puzik ai. Задай любой вопрос или задачу!';
+            l.textContent = 'Привет! Я puzik ai. Задай любой вопрос, новость или задачу!';
         } else {
             l.textContent = await webSearch(t);
         }
