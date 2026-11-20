@@ -19,16 +19,16 @@ button.send{padding:0 18px;border-radius:20px;border:none;background:#3390ec;col
 </style>
 </head>
 <body>
-<header>🤖 puzik ai v7</header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно своими словами — я пойму!</div></div>
+<header>🤖 puzik ai (Википедия)</header>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Спроси меня о любом городе, человеке, событии или предмете — я найду ответ в Википедии!</div></div>
 <div id="chips">
-    <button class="chip" onclick="quick('Погода в Каменце')">🌤 Погода</button>
-    <button class="chip" onclick="quick('Курс доллара')">💵 Курс валют</button>
-    <button class="chip" onclick="quick('Расскажи интересный факт')">💡 Факт</button>
+    <button class="chip" onclick="quick('Брест')">🏰 Брест</button>
+    <button class="chip" onclick="quick('Каменецкая башня')">🗼 Каменец</button>
+    <button class="chip" onclick="quick('Солнечная система')">🪐 Космос</button>
     <button class="chip" onclick="quick('Таблица умножения')">📊 Таблица</button>
 </div>
 <div id="inp">
-    <input id="p" placeholder="Напиши любой вопрос..." onkeydown="if(event.key==='Enter')send()">
+    <input id="p" placeholder="Например: кто такой Илон Маск..." onkeydown="if(event.key==='Enter')send()">
     <button class="send" onclick="send()">Отпр.</button>
 </div>
 <script>
@@ -48,19 +48,26 @@ function quick(text) {
     send();
 }
 
+function jsonp(url) {
+    return new Promise(function(resolve, reject) {
+        var cb = 'wcb_' + Math.floor(Math.random() * 1000000);
+        var s = document.createElement('script');
+        var t = setTimeout(function() { delete window[cb]; s.remove(); reject(); }, 7000);
+        window[cb] = function(d) { clearTimeout(t); delete window[cb]; s.remove(); resolve(d); };
+        s.src = url + '&callback=' + cb;
+        s.onerror = function() { clearTimeout(t); delete window[cb]; s.remove(); reject(); };
+        document.body.appendChild(s);
+    });
+}
+
 function getLocal(t) {
     var m = t.toLowerCase().trim();
-    if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) {
-        return 'Месси, потому что я его парень';
-    }
+    if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) return 'Месси, потому что я его парень';
     if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
     if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
-    if (m.indexOf('сегодня') !== -1 && (m.indexOf('день') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1)) {
-        return '📅 Сегодня: ' + new Date().toLocaleDateString('ru-RU');
-    }
-    if (m.indexOf('время') !== -1 || m.indexOf('который час') !== -1) {
-        return '⏰ Сейчас: ' + new Date().toLocaleTimeString('ru-RU');
-    }
+    if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Напиши любое слово или вопрос — я найду статью в Википедии!';
+    if (m.indexOf('сегодня') !== -1 && (m.indexOf('день') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1)) return '📅 Сегодня: ' + new Date().toLocaleDateString('ru-RU');
+    if (m.indexOf('время') !== -1 || m.indexOf('который час') !== -1) return '⏰ Сейчас: ' + new Date().toLocaleTimeString('ru-RU');
     if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
         var r = '📊 Таблица умножения:' + NL;
         for (var i = 2; i <= 9; i++) {
@@ -79,60 +86,47 @@ function getLocal(t) {
     return null;
 }
 
-async function askSmart(q) {
+async function wiki(q) {
     var low = q.toLowerCase();
+    var stop = ['что', 'такое', 'кто', 'такой', 'такая', 'такие', 'расскажи', 'про', 'подскажи', 'пожалуйста', 'почему', 'зачем', 'когда', 'где', 'как', 'появился', 'основали', 'основан', 'история', 'основание', 'вообще', 'мне', 'о', 'об', 'в', 'на', 'из', 'за', 'новости'];
+    var words = low.split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ');
+    var keys = [];
+    for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        if (w === 'бреста' || w === 'бресте') w = 'Брест';
+        if (w === 'минска' || w === 'минске') w = 'Минск';
+        if (w === 'каменца' || w === 'каменце') w = 'Каменец';
+        if (w.length > 2 && stop.indexOf(w) === -1) keys.push(w);
+    }
+    var search = keys.join(' ') || q;
 
-    // 1. Погода в любом городе
-    if (low.indexOf('погод') !== -1) {
-        try {
-            var city = low.split('погода').join('').split('погоду').join('').split('в ').join('').split('каменце').join('Каменец').split('бресте').join('Брест').split('минске').join('Минск').trim() || 'Каменец';
-            var g = await (await fetch('https://open-meteo.com' + encodeURIComponent(city) + '&count=1&language=ru&format=json')).json();
-            if (g.results && g.results.length) {
-                var pl = g.results.shift();
-                var w = await (await fetch('https://open-meteo.com' + pl.latitude + '&longitude=' + pl.longitude + '&current_weather=true')).json();
-                if (w.current_weather) return '🌤 Погода (' + pl.name + '): ' + w.current_weather.temperature + ' °C, ветер ' + w.current_weather.windspeed + ' км/ч';
+    try {
+        var sData = await jsonp('https://wikipedia.org' + encodeURIComponent(search) + '&format=json');
+        if (sData && sData.query && sData.query.search && sData.query.search.length > 0) {
+            var list = sData.query.search;
+            var best = list.shift();
+            var pData = await jsonp('https://wikipedia.org' + encodeURIComponent(best.title) + '&format=json');
+            var ans = '';
+            if (pData && pData.query && pData.query.pages) {
+                for (var k in pData.query.pages) {
+                    if (pData.query.pages[k] && pData.query.pages[k].extract) {
+                        var txt = pData.query.pages[k].extract;
+                        if (txt.length > 750) txt = txt.substring(0, 750) + '...';
+                        ans = '📖 ' + pData.query.pages[k].title + ':' + NL + txt;
+                    }
+                }
             }
-        } catch (e) {}
-    }
-
-    // 2. Курс валют РБ
-    if (low.indexOf('курс') !== -1 || low.indexOf('доллар') !== -1 || low.indexOf('евро') !== -1 || low.indexOf('валют') !== -1) {
-        try {
-            var u = await (await fetch('https://nbrb.by')).json();
-            var eu = await (await fetch('https://nbrb.by')).json();
-            var ru = await (await fetch('https://nbrb.by')).json();
-            return '💵 Курс НБ РБ:' + NL + '🇺🇸 1 USD = ' + u.Cur_OfficialRate + ' BYN' + NL + '🇪🇺 1 EUR = ' + eu.Cur_OfficialRate + ' BYN' + NL + '🇷🇺 100 RUB = ' + ru.Cur_OfficialRate + ' BYN';
-        } catch (e) {}
-    }
-
-    // 3. Попытка получить живой ответ от свободной нейросети
-    try {
-        var aiPrompt = encodeURIComponent('Ты дружелюбный умный помощник puzik ai. Ответь подробно и понятно на русском языке: ' + q);
-        var aiRes = await fetch('https://pollinations.ai' + aiPrompt);
-        if (aiRes.ok) {
-            var aiText = await aiRes.text();
-            if (aiText && aiText.trim().length > 2) return aiText.trim();
+            if (list.length > 0 && ans) {
+                ans += NL + NL + '🔎 Похожие темы: ';
+                var others = [];
+                for (var j = 0; j < Math.min(2, list.length); j++) others.push(list.slice(j, j + 1).shift().title);
+                ans += others.join(', ');
+            }
+            if (ans) return ans;
         }
     } catch (e) {}
 
-    // 4. Умный поиск по всей базе знаний Википедии (если нейросеть заблокирована сетью)
-    try {
-        var stopWords = ['что', 'такое', 'кто', 'такой', 'такая', 'расскажи', 'про', 'подскажи', 'пожалуйста', 'почему', 'зачем', 'когда', 'где', 'как', 'появился', 'основан', 'история', 'основание', 'вообще', 'мне', 'о', 'об', 'в'];
-        var words = low.split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ');
-        var keyWords = [];
-        for (var i = 0; i < words.length; i++) {
-            if (words[i].length > 2 && stopWords.indexOf(words[i]) === -1) keyWords.push(words[i]);
-        }
-        var searchStr = keyWords.join(' ') || q;
-        var wd = await (await fetch('https://wikipedia.org' + encodeURIComponent(searchStr) + '&format=json&origin=*')).json();
-        if (wd.query && wd.query.search && wd.query.search.length) {
-            var hit = wd.query.search.shift();
-            var sd = await (await fetch('https://wikipedia.org' + encodeURIComponent(hit.title))).json();
-            if (sd.extract) return '📖 ' + sd.title + ':' + NL + sd.extract;
-        }
-    } catch (e) {}
-
-    return 'Я пока не смог достать ответ из сети. Попробуй переформулировать вопрос или нажми на одну из кнопок подсказок внизу!';
+    return 'В Википедии по запросу «' + search + '» ничего не нашлось. Попробуй написать проще — одним или двумя словами (например: «Брестская крепость» или «Юрий Гагарин»)!';
 }
 
 async function send() {
@@ -140,11 +134,11 @@ async function send() {
     if (!t) return;
     add(t, 1);
     inp.value = '';
-    var l = add('🤖 Думаю...', 0);
+    var l = add('📖 Ищу в Википедии...', 0);
     try {
-        l.textContent = getLocal(t) || await askSmart(t);
+        l.textContent = getLocal(t) || await wiki(t);
     } catch (e) {
-        l.textContent = 'Ошибка соединения.';
+        l.textContent = 'Ошибка поиска в Википедии.';
     }
 }
 </script>
