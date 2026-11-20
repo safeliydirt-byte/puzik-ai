@@ -22,7 +22,7 @@ button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:
 </head>
 <body>
 <header><div class="brand">puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Могу ответить на любой вопрос сам, решить задачу или найти видео на YouTube!</div></div>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно — отвечу сам, решу задачу или подберу ролик на YouTube!</div></div>
 <div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
 <script>
 var NL=String.fromCharCode(10),hist=[];
@@ -36,15 +36,19 @@ function talk(t){
  if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
  if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! О чём хочешь поговорить?';
- if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='Таблица умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'*'+j+'='+(i*j)+' ';r+=NL}return r}
+ if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){
+  var r='Таблица умножения:'+NL,nums=[2,3,4,5,6,7,8,9],mults=[1,2,3,4,5,6,7,8,9,10];
+  nums.forEach(function(i){mults.forEach(function(j){r+=i+'*'+j+'='+(i*j)+' '});r+=NL});
+  return r;
+ }
  var cl=m.split('реши').join('').split('посчитай').join('').split(':').join('/').split(',').join('.').trim();
- if(cl.length>0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return 'Ответ: '+v}catch(e){}}
+ if(cl.length!==0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return 'Ответ: '+v}catch(e){}}
  return null;
 }
 
 async function generateAI(q){
  hist.push({role:'user',content:q});
- if(hist.length>6)hist=hist.slice(-6);
+ if(hist.length===7)hist.shift();
  var msgs=[{role:'system',content:'Тебя зовут puzik ai. Отвечай по-русски, живо и по делу.'}].concat(hist);
 
  try{
@@ -63,7 +67,7 @@ async function generateAI(q){
   var lst=(sd&&sd.query&&sd.query.search)?sd.query.search:[];
   if(lst.length){
    var pd=await jsonp('https://wikipedia.org(lst.shift().title)+'&format=json');
-   for(var k in pd.query.pages){var pg=pd.query.pages[k];if(pg&&pg.extract)return 'Вот что я нашёл:'+NL+NL+pg.extract}
+   for(var k in pd.query.pages){var pg=pd.query.pages[k];if(pg&&pg.extract)return 'Вот что я знаю об этом:'+NL+NL+pg.extract}
   }
  }catch(e){}
 
