@@ -21,7 +21,7 @@ button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:
 </head>
 <body>
 <header><div class="brand">puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно — отвечу сам как настоящая нейросеть!</div></div>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Отвечаю быстро — спрашивай о чём угодно!</div></div>
 <div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.keyCode===13)send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
 <script>
 var NL = String.fromCharCode(10);
@@ -69,65 +69,70 @@ function talk(t) {
     return null;
 }
 
-function httpReq(method, url, body, onOk, onErr) {
+function fastReq(method, url, body, doneFn) {
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
-    xhr.timeout = 12000;
+    xhr.timeout = 5500;
     if (body) xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
             if (xhr.status === 200 && xhr.responseText && xhr.responseText.trim().length !== 0) {
-                onOk(xhr.responseText);
+                doneFn(true, xhr.responseText);
             } else {
-                onErr();
+                doneFn(false, '');
             }
         }
     };
-    xhr.ontimeout = onErr;
-    xhr.onerror = onErr;
+    xhr.ontimeout = function() { doneFn(false, ''); };
+    xhr.onerror = function() { doneFn(false, ''); };
     xhr.send(body || null);
 }
 
-function askAI(q, box) {
-    var sysPrompt = 'Тебя зовут puzik ai. Отвечай на русском языке живо, понятно и подробно на любой вопрос пользователя: ' + q;
-    var url1 = 'https://pollinations.ai' + encodeURIComponent(sysPrompt);
+function askFastAI(q, box) {
+    var finished = false;
+    var fails = 0;
 
-    // 1. Пробуем нейросеть Pollinations напрямую
-    httpReq('GET', url1, null, function(txt) {
-        box.textContent = txt.trim();
-    }, function() {
-        // 2. Пробуем нейросеть LLM7 (GPT-4o-mini)
-        var payload = JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: new Array(
-                { role: 'system', content: 'Тебя зовут puzik ai. Отвечай по-русски, живо и по делу.' },
-                { role: 'user', content: q }
-            )
-        });
-        httpReq('POST', 'https://llm7.io', payload, function(raw) {
+    function finish(text) {
+        if (finished) return;
+        finished = true;
+        box.textContent = text;
+    }
+
+    function onFail() {
+        fails++;
+        if (fails === 3 && !finished) {
+            finish('Серверы ИИ сейчас не отвечают без VPN. Попробуй включить VPN на 5 секунд или задать другой вопрос!');
+        }
+    }
+
+    var prompt = 'Ответь на русском языке как ИИ puzik ai: ' + q;
+    var urlFast = 'https://pollinations.ai' + encodeURIComponent(prompt) + '?model=openai-fast';
+
+    // 1. Быстрый канал Pollinations (старт сразу)
+    fastReq('GET', urlFast, null, function(ok, txt) {
+        if (ok) finish(txt.trim()); else onFail();
+    });
+
+    // 2. Быстрый канал LLM7 (старт одновременно)
+    var payload = JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: new Array({ role: 'user', content: prompt })
+    });
+    fastReq('POST', 'https://llm7.io', payload, function(ok, raw) {
+        if (ok) {
             try {
                 var data = JSON.parse(raw);
                 var ans = data && data.choices && data.choices.length ? data.choices.shift().message.content : '';
-                if (ans) {
-                    box.textContent = ans.trim();
-                    return;
-                }
+                if (ans) { finish(ans.trim()); return; }
             } catch (e) {}
-            tryProxy();
-        }, function() {
-            tryProxy();
-        });
+        }
+        onFail();
     });
 
-    // 3. Пробуем нейросеть через обходной прокси-шлюз CodeTabs
-    function tryProxy() {
-        var proxyUrl = 'https://codetabs.com' + encodeURIComponent(url1);
-        httpReq('GET', proxyUrl, null, function(txt2) {
-            box.textContent = txt2.trim();
-        }, function() {
-            box.textContent = 'Нейросети сейчас перегружены или заблокированы твоим провайдером без VPN. Попробуй отправить вопрос ещё раз!';
-        });
-    }
+    // 3. Обходной прокси-канал CodeTabs (старт одновременно)
+    fastReq('GET', 'https://codetabs.com' + encodeURIComponent(urlFast), null, function(ok, txt2) {
+        if (ok) finish(txt2.trim()); else onFail();
+    });
 }
 
 function send() {
@@ -142,7 +147,7 @@ function send() {
         l.textContent = loc;
         return;
     }
-    askAI(t, l);
+    askFastAI(t, l);
 }
 </script>
 </body>
