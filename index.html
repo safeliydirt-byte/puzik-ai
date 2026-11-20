@@ -17,50 +17,44 @@ button{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#f
 </style>
 </head>
 <body>
-<header>🤖 puzik ai v4</header>
+<header>🤖 puzik ai v5</header>
 <div id="chat"></div>
 <div id="inp"><input id="p" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Отпр.</button></div>
 <script>
-function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-
-function math(t){
- var c=t.toLowerCase().replace(/^(реши|посчитай|вычисли|сколько будет)\s*[:=-]?\s*/i,'').replace(/,/g,'.').replace(/×/g,'*').replace(/х/g,'x').replace(/:/g,'/').trim();
- if(c.indexOf('=')!==-1&&c.indexOf('x')!==-1){
-  var s=c.split('=');
-  if(s.length===2){
-   var ps=function(e){var n=e.replace(/\s+/g,'');if(n.charAt(0)!=='+'&&n.charAt(0)!=='-')n='+'+n;var tm=n.match(/[+-][^+-]+/g)||[],kx=0,kc=0;while(tm.length){var m=tm.shift();if(m.indexOf('x')!==-1){var v=m.replace('*x','').replace('x','');kx+=(v==='+'||v==='')?1:(v==='-'?-1:parseFloat(v))}else kc+=parseFloat(m)}return{kx:kx,kc:kc}};
-   var l=ps(s.shift()),r=ps(s.shift()),tx=l.kx-r.kx,tc=r.kc-l.kc;
-   if(tx!==0&&!isNaN(tx)&&!isNaN(tc))return '🧮 '+tx+'x = '+tc+'\n✅ x = '+Number((tc/tx).toFixed(4));
-  }
- }
- var ex=c.replace(/\^/g,'**').replace(/sqrt\(/g,'Math.sqrt(');
- if(/^[0-9+\-*/().\s*Mathsqrt]+$/.test(ex)&&/[0-9]/.test(ex)&&/[+\-*/]|sqrt/.test(ex)){
-  try{var r=Function('"use strict";return('+ex+')')();if(typeof r==='number'&&isFinite(r))return '🧮 '+c+' = '+Number(r.toFixed(6))}catch(e){}
- }
- return null;
+function add(t,u){
+ var c=document.getElementById('chat'),d=document.createElement('div');
+ d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
 }
 
-function local(t){
+function getAnswer(t){
  var m=t.toLowerCase().trim();
  if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
  if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку'||m==='помощь')return 'Привет! Я puzik ai:\n• Погода (погода Брест / Каменец)\n• Курс валют РБ (курс доллара)\n• Уравнения и примеры (3x + 5 = 20)\n• История, факты, анекдоты, таблица умножения';
- if((m.indexOf('какой')!==-1||m.indexOf('какое')!==-1||m.indexOf('сегодня')!==-1)&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 '+new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
- if(m.indexOf('сколько врем')!==-1||m.indexOf('который час')!==-1)return '⏰ '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+ if(m==='привет'||m==='ку'||m==='помощь')return 'Привет! Я puzik ai v5:\n• Погода (погода Брест / Каменец)\n• Курс валют РБ (курс доллара)\n• Примеры (например: 25 * 4 + 10)\n• История, факты, анекдоты, таблица умножения';
+ if(m.indexOf('сегодня')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1||m.indexOf('какой день')!==-1)return '📅 Сегодня: '+new Date().toLocaleDateString('ru-RU');
+ if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ Сейчас: '+new Date().toLocaleTimeString('ru-RU');
  if(m.indexOf('брест')!==-1&&(m.indexOf('основан')!==-1||m.indexOf('истор')!==-1))return '🏰 Брест (Берестье) впервые упомянут в 1019 году. В 1390 году первым в Беларуси получил Магдебургское право.';
  if(m.indexOf('каменец')!==-1&&(m.indexOf('основан')!==-1||m.indexOf('истор')!==-1||m.indexOf('башн')!==-1))return '🗼 Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
- if(m.indexOf('анекдот')!==-1||m.indexOf('шутк')!==-1)return '😂 '+['— Папа, почему холодно? — Я программист, я закрыл все окна!','Программист ставит два стакана: с водой — если захочет пить, пустой — если не захочет.'].sort(function(){return 0.5-Math.random()}).shift();
- if(m.indexOf('факт')!==-1)return '💡 '+['У осьминога три сердца и голубая кровь.','Сутки на Венере длиннее года.','Беловежская пуща — один из старейших заповедников мира.'].sort(function(){return 0.5-Math.random()}).shift();
- if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r=['📊 Таблица умножения:'];for(var i=2;i<=9;i++){var a=[];for(var j=1;j<=10;j++)a.push(i+'×'+j+'='+(i*j));r.push('На '+i+': '+a.join(', '))}return r.join('\n')}
- return math(t);
+ if(m.indexOf('анекдот')!==-1||m.indexOf('шутк')!==-1)return '😂 — Папа, почему холодно? — Я программист, я закрыл все окна!';
+ if(m.indexOf('факт')!==-1)return '💡 У осьминога три сердца, девять мозгов и голубая кровь.';
+ if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){
+  var r='📊 Таблица умножения:\n';
+  for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+='\n'}
+  return r;
+ }
+ var clean=m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
+ if(clean.length>0&&'0123456789('.indexOf(clean.charAt(0))!==-1){
+  try{var res=Function('return('+clean+')')();if(typeof res==='number'&&isFinite(res))return '🧮 '+clean+' = '+res}catch(e){}
+ }
+ return null;
 }
 
 async function web(q){
  var low=q.toLowerCase();
  if(low.indexOf('погод')!==-1){
   try{
-   var city=low.replace(/погода\s*(в|во)?/gi,'').replace(/[?!.]+$/,'').trim()||'Брест';
+   var city=low.split('погода').join('').split('в ').join('').trim()||'Брест';
    var g=await(await fetch('https://open-meteo.com')).json();
    if(g.results&&g.results.length){
     var pl=g.results.shift(),w=await(await fetch('https://open-meteo.com')).json();
@@ -75,20 +69,20 @@ async function web(q){
   }catch(e){}
  }
  try{
-  var cl=low.replace(/^(что такое|кто такой|кто такая|расскажи про|найди|новости|основание|история)\s+/gi,'').replace(/бреста/g,'Брест').replace(/минска/g,'Минск').replace(/[?!.]+$/,'').trim();
+  var cl=low.split('что такое').join('').split('кто такой').join('').split('расскажи про').join('').split('бреста').join('Брест').trim();
   if(cl.length>1){
    var wd=await(await fetch('https://wikipedia.org*')).json();
    var hit=wd.query&&wd.query.search&&wd.query.search.length?wd.query.search.shift():null;
    if(hit){var sd=await(await fetch('https://wikipedia.org)).json();if(sd.extract)return '📖 '+sd.title+':\n'+sd.extract}
   }
  }catch(e){}
- return 'Не нашлось. Попробуй проще: «погода Брест», «курс доллара», «основание Бреста» или введи пример!';
+ return 'Не нашлось. Напиши проще: «погода Брест», «курс доллара», «основание Бреста» или пример (например: 15 * 4)!';
 }
 
 async function send(){
  var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
  add(t,1);inp.value='';var l=add('🔍 Думаю...',0);
- try{l.textContent=local(t)||await web(t)}catch(e){l.textContent='Ошибка запроса.'}
+ try{l.textContent=getAnswer(t)||await web(t)}catch(e){l.textContent='Ошибка'}
 }
 </script>
 </body>
