@@ -19,28 +19,54 @@ button.s{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:
 </head>
 <body>
 <header>🤖 puzik ai</header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай что угодно из Википедии!</div></div>
-<div id="inp"><input id="p" placeholder="Задай вопрос..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">Отпр.</button></div>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно своими словами — я пойму!</div></div>
+<div id="inp"><input id="p" placeholder="Напиши вопрос своими словами..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">Отпр.</button></div>
 <script>
 var NL=String.fromCharCode(10),cache='',off=0;
 function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
 function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},7000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+'&callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
 
-function local(t){
+function talk(t){
  var m=t.toLowerCase().trim();
  if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
  if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку')return 'Привет! Задай любой вопрос — найду в Википедии!';
- if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 '+new Date().toLocaleDateString('ru-RU');
- if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ '+new Date().toLocaleTimeString('ru-RU');
+ if(m==='привет'||m==='ку'||m==='здарова'||m==='хай')return 'Привет! О чём хочешь узнать? Спрашивай своими словами!';
+ if(m.indexOf('как дела')!==-1||m.indexOf('как ты')!==-1)return 'У меня всё отлично! Готов отвечать на любые твои вопросы.';
+ if(m.indexOf('что делаешь')!==-1)return 'Изучаю знания, чтобы отвечать на твои вопросы!';
+ if(m.indexOf('кто ты')!==-1||m.indexOf('тебя зовут')!==-1)return 'Я puzik ai — твой умный помощник в Telegram!';
+ if(m.indexOf('спасибо')!==-1||m.indexOf('благодар')!==-1)return 'Всегда пожалуйста! Обращайся в любое время.';
+ if(m.indexOf('молодец')!==-1||m.indexOf('круто')!==-1||m.indexOf('супер')!==-1)return 'Стараюсь! Спрашивай ещё что-нибудь интересное.';
+ if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 Сегодня: '+new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ Сейчас: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
  if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='📊 Таблица умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+=NL}return r}
  var cl=m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
  if(cl.length>0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return '🧮 '+cl+' = '+v}catch(e){}}
  return null;
 }
 
-async function searchWiki(lang,q){
+function extractKeywords(q){
+ var stop=['что','такое','кто','такой','такая','такие','расскажи','про','подскажи','пожалуйста','когда','где','как','почему','зачем','откуда','взялась','взялся','появился','появилась','основали','основан','история','основание','мне','о','об','в','на','из','за','для','ли','или','а','но','и','же','бы','вообще','можешь','скажи','знаешь','слышь','слушай','такой','какой','какая','какие','сколько'];
+ var clean=q.toLowerCase().split('?').join(' ').split('!').join(' ').split('.').join(' ').split(',').join(' ').split('-').join(' ');
+ var words=clean.split(' '),res=[];
+ for(var i=0;i<words.length;i++){
+  var w=words[i].trim();
+  if(w.length>2&&stop.indexOf(w)===-1)res.push(w);
+ }
+ return res;
+}
+
+function stemWord(w){
+ if(w.length<=4)return w;
+ var ends=['ого','ему','ыми','ими','ами','ями','ых','их','ой','ей','ом','ем','ах','ях','у','ю','а','я','ы','и','е','о'];
+ for(var i=0;i<ends.length;i++){
+  var e=ends[i];
+  if(w.length-e.length>=4&&w.slice(-e.length)===e)return w.slice(0,-e.length);
+ }
+ return w;
+}
+
+async function queryWiki(lang,q){
  var b='https://'+lang+'.wikipedia.org/w/api.php';
  var sd=await jsonp(b+'?action=query&list=search&srlimit=4&srsearch='+encodeURIComponent(q)+'&format=json');
  if(!sd||!sd.query||!sd.query.search||!sd.query.search.length)return null;
@@ -53,25 +79,33 @@ async function searchWiki(lang,q){
  return null;
 }
 
-async function wiki(q){
- var stop=['что','такое','кто','такой','такая','расскажи','про','подскажи','пожалуйста','когда','где','как','основали','основан','история','основание','мне','о','об','в','на','найди'];
- var wds=q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' '),ks=[];
- for(var i=0;i<wds.length;i++){
-  var w=wds[i];
-  if(w==='бреста'||w==='бресте')w='Брест';if(w==='минска')w='Минск';if(w==='каменца')w='Каменец';
-  if(w.length>2&&stop.indexOf(w)===-1)ks.push(w);
+async function smartFind(q){
+ var kw=extractKeywords(q);
+ var attempts=[];
+ if(kw.length>0)attempts.push(kw.join(' '));
+ if(kw.length>2){
+  var sorted=kw.slice().sort(function(a,b){return b.length-a.length});
+  attempts.push(sorted.slice(0,2).join(' '));
+  attempts.push(stemWord(sorted.shift()));
+ }else if(kw.length>0){
+  attempts.push(stemWord(kw.slice().sort(function(a,b){return b.length-a.length}).shift()));
  }
- var s=ks.join(' ')||q;
- try{
-  var r=await searchWiki('ru',s)||await searchWiki('en',s);
-  if(r){
-   cache=r.text;off=1500;
-   var out='📖 '+r.title+':'+NL+r.text.substring(0,1500)+(r.text.length>1500?'...':'');
-   if(r.rel.length){var rm=[];for(var j=0;j<Math.min(3,r.rel.length);j++)rm.push(r.rel.slice(j,j+1).shift().title);out+=NL+NL+'🔎 Похожее: '+rm.join(', ')}
-   return{text:out,img:r.img,more:r.text.length>1500};
-  }
- }catch(e){}
- return{text:'По запросу «'+s+'» ничего не нашлось. Напиши проще!',img:null,more:false};
+ attempts.push(q);
+
+ for(var i=0;i<attempts.length;i++){
+  var term=attempts[i];
+  if(!term||term.length<2)continue;
+  try{
+   var r=await queryWiki('ru',term)||await queryWiki('en',term);
+   if(r){
+    cache=r.text;off=1500;
+    var out='📖 '+r.title+':'+NL+r.text.substring(0,1500)+(r.text.length>1500?'...':'');
+    if(r.rel.length){var rm=[];for(var j=0;j<Math.min(3,r.rel.length);j++)rm.push(r.rel.slice(j,j+1).shift().title);out+=NL+NL+'🔎 Похожее: '+rm.join(', ')}
+    return{text:out,img:r.img,more:r.text.length>1500};
+   }
+  }catch(e){}
+ }
+ return{text:'Интересный вопрос! Но в моей энциклопедии пока нет точной статьи об этом. Спроси о другом факте, событии или человеке!',img:null,more:false};
 }
 
 function moreBtn(div){
@@ -82,15 +116,15 @@ function moreBtn(div){
 
 async function send(){
  var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
- add(t,1);inp.value='';var l=add('📖 Ищу...',0);
+ add(t,1);inp.value='';var l=add('🤔 Думаю...',0);
  try{
-  var loc=local(t);
+  var loc=talk(t);
   if(loc){l.textContent=loc}else{
-   var r=await wiki(t);l.textContent=r.text;
+   var r=await smartFind(t);l.textContent=r.text;
    if(r.img){var im=document.createElement('img');im.src=r.img;im.style.cssText='max-width:100%;border-radius:12px;margin-top:8px;display:block';l.appendChild(im)}
    if(r.more)moreBtn(l);
   }
- }catch(e){l.textContent='Ошибка поиска.'}
+ }catch(e){l.textContent='Небольшой сбой сети, попробуй спросить ещё раз!'}
 }
 </script>
 </body>
