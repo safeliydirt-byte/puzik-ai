@@ -6,26 +6,36 @@
 <title>puzik ai</title>
 <style>
 body{font-family:sans-serif;background:#121212;color:#fff;margin:0;display:flex;flex-direction:column;height:100vh}
-header{padding:14px;text-align:center;font-weight:bold;font-size:18px;background:#1e1e1e;border-bottom:1px solid #333}
+header{padding:12px;text-align:center;font-weight:bold;font-size:18px;background:#1e1e1e;border-bottom:1px solid #333}
 #chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
 .m{max-width:85%;padding:10px 14px;border-radius:16px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
 .u{align-self:flex-end;background:#2b5278}
 .a{align-self:flex-start;background:#252525}
+#chips{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;background:#181818;border-top:1px solid #2a2a2a}
+.chip{background:#2c2c2c;color:#ddd;border:none;border-radius:14px;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
 #inp{display:flex;padding:10px;gap:8px;background:#1e1e1e}
 input{flex:1;padding:12px;border-radius:20px;border:none;background:#2c2c2c;color:#fff;font-size:16px;outline:none}
-button{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#fff;font-weight:bold;cursor:pointer}
+button.send{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#fff;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
-<header>🤖 puzik ai v6</header>
-<div id="chat"></div>
-<div id="inp"><input id="p" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Отпр.</button></div>
+<header>🤖 puzik ai v7</header>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно своими словами — я пойму!</div></div>
+<div id="chips">
+    <button class="chip" onclick="quick('Погода в Каменце')">🌤 Погода</button>
+    <button class="chip" onclick="quick('Курс доллара')">💵 Курс валют</button>
+    <button class="chip" onclick="quick('Расскажи интересный факт')">💡 Факт</button>
+    <button class="chip" onclick="quick('Таблица умножения')">📊 Таблица</button>
+</div>
+<div id="inp">
+    <input id="p" placeholder="Напиши любой вопрос..." onkeydown="if(event.key==='Enter')send()">
+    <button class="send" onclick="send()">Отпр.</button>
+</div>
 <script>
 var NL = String.fromCharCode(10);
 
 function add(t, u) {
-    var c = document.getElementById('chat');
-    var d = document.createElement('div');
+    var c = document.getElementById('chat'), d = document.createElement('div');
     d.className = 'm ' + (u ? 'u' : 'a');
     d.textContent = t;
     c.appendChild(d);
@@ -33,33 +43,23 @@ function add(t, u) {
     return d;
 }
 
-function getAnswer(t) {
+function quick(text) {
+    document.getElementById('p').value = text;
+    send();
+}
+
+function getLocal(t) {
     var m = t.toLowerCase().trim();
     if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) {
         return 'Месси, потому что я его парень';
     }
     if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
     if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
-    if (m === 'привет' || m === 'ку' || m === 'помощь') {
-        return 'Привет! Я puzik ai v6:' + NL + '• Погода (погода Брест / Каменец)' + NL + '• Курс валют РБ (курс доллара)' + NL + '• Примеры (например: 25 * 4 + 10)' + NL + '• История, факты, анекдоты, таблица умножения';
-    }
-    if (m.indexOf('сегодня') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1 || m.indexOf('какой день') !== -1) {
+    if (m.indexOf('сегодня') !== -1 && (m.indexOf('день') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1)) {
         return '📅 Сегодня: ' + new Date().toLocaleDateString('ru-RU');
     }
     if (m.indexOf('время') !== -1 || m.indexOf('который час') !== -1) {
         return '⏰ Сейчас: ' + new Date().toLocaleTimeString('ru-RU');
-    }
-    if (m.indexOf('брест') !== -1 && (m.indexOf('основан') !== -1 || m.indexOf('истор') !== -1)) {
-        return '🏰 Брест (Берестье) впервые упомянут в 1019 году. В 1390 году первым в Беларуси получил Магдебургское право.';
-    }
-    if (m.indexOf('каменец') !== -1 && (m.indexOf('основан') !== -1 || m.indexOf('истор') !== -1 || m.indexOf('башн') !== -1)) {
-        return '🗼 Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
-    }
-    if (m.indexOf('анекдот') !== -1 || m.indexOf('шутк') !== -1) {
-        return '😂 — Папа, почему холодно? — Я программист, я закрыл все окна!';
-    }
-    if (m.indexOf('факт') !== -1) {
-        return '💡 У осьминога три сердца, девять мозгов и голубая кровь.';
     }
     if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
         var r = '📊 Таблица умножения:' + NL;
@@ -79,11 +79,13 @@ function getAnswer(t) {
     return null;
 }
 
-async function web(q) {
+async function askSmart(q) {
     var low = q.toLowerCase();
+
+    // 1. Погода в любом городе
     if (low.indexOf('погод') !== -1) {
         try {
-            var city = low.split('погода').join('').split('в ').join('').trim() || 'Брест';
+            var city = low.split('погода').join('').split('погоду').join('').split('в ').join('').split('каменце').join('Каменец').split('бресте').join('Брест').split('минске').join('Минск').trim() || 'Каменец';
             var g = await (await fetch('https://open-meteo.com' + encodeURIComponent(city) + '&count=1&language=ru&format=json')).json();
             if (g.results && g.results.length) {
                 var pl = g.results.shift();
@@ -92,7 +94,9 @@ async function web(q) {
             }
         } catch (e) {}
     }
-    if (low.indexOf('курс') !== -1 || low.indexOf('доллар') !== -1 || low.indexOf('евро') !== -1) {
+
+    // 2. Курс валют РБ
+    if (low.indexOf('курс') !== -1 || low.indexOf('доллар') !== -1 || low.indexOf('евро') !== -1 || low.indexOf('валют') !== -1) {
         try {
             var u = await (await fetch('https://nbrb.by')).json();
             var eu = await (await fetch('https://nbrb.by')).json();
@@ -100,31 +104,47 @@ async function web(q) {
             return '💵 Курс НБ РБ:' + NL + '🇺🇸 1 USD = ' + u.Cur_OfficialRate + ' BYN' + NL + '🇪🇺 1 EUR = ' + eu.Cur_OfficialRate + ' BYN' + NL + '🇷🇺 100 RUB = ' + ru.Cur_OfficialRate + ' BYN';
         } catch (e) {}
     }
+
+    // 3. Попытка получить живой ответ от свободной нейросети
     try {
-        var cl = low.split('что такое').join('').split('кто такой').join('').split('расскажи про').join('').split('бреста').join('Брест').trim();
-        if (cl.length > 1) {
-            var wd = await (await fetch('https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&origin=*')).json();
-            var hit = wd.query && wd.query.search && wd.query.search.length ? wd.query.search.shift() : null;
-            if (hit) {
-                var sd = await (await fetch('https://wikipedia.org' + encodeURIComponent(hit.title))).json();
-                if (sd.extract) return '📖 ' + sd.title + ':' + NL + sd.extract;
-            }
+        var aiPrompt = encodeURIComponent('Ты дружелюбный умный помощник puzik ai. Ответь подробно и понятно на русском языке: ' + q);
+        var aiRes = await fetch('https://pollinations.ai' + aiPrompt);
+        if (aiRes.ok) {
+            var aiText = await aiRes.text();
+            if (aiText && aiText.trim().length > 2) return aiText.trim();
         }
     } catch (e) {}
-    return 'Не нашлось. Напиши проще: «погода Брест», «курс доллара», «основание Бреста» или пример (например: 15 * 4)!';
+
+    // 4. Умный поиск по всей базе знаний Википедии (если нейросеть заблокирована сетью)
+    try {
+        var stopWords = ['что', 'такое', 'кто', 'такой', 'такая', 'расскажи', 'про', 'подскажи', 'пожалуйста', 'почему', 'зачем', 'когда', 'где', 'как', 'появился', 'основан', 'история', 'основание', 'вообще', 'мне', 'о', 'об', 'в'];
+        var words = low.split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ');
+        var keyWords = [];
+        for (var i = 0; i < words.length; i++) {
+            if (words[i].length > 2 && stopWords.indexOf(words[i]) === -1) keyWords.push(words[i]);
+        }
+        var searchStr = keyWords.join(' ') || q;
+        var wd = await (await fetch('https://wikipedia.org' + encodeURIComponent(searchStr) + '&format=json&origin=*')).json();
+        if (wd.query && wd.query.search && wd.query.search.length) {
+            var hit = wd.query.search.shift();
+            var sd = await (await fetch('https://wikipedia.org' + encodeURIComponent(hit.title))).json();
+            if (sd.extract) return '📖 ' + sd.title + ':' + NL + sd.extract;
+        }
+    } catch (e) {}
+
+    return 'Я пока не смог достать ответ из сети. Попробуй переформулировать вопрос или нажми на одну из кнопок подсказок внизу!';
 }
 
 async function send() {
-    var inp = document.getElementById('p');
-    var t = inp.value.trim();
+    var inp = document.getElementById('p'), t = inp.value.trim();
     if (!t) return;
     add(t, 1);
     inp.value = '';
-    var l = add('🔍 Думаю...', 0);
+    var l = add('🤖 Думаю...', 0);
     try {
-        l.textContent = getAnswer(t) || await web(t);
+        l.textContent = getLocal(t) || await askSmart(t);
     } catch (e) {
-        l.textContent = 'Ошибка';
+        l.textContent = 'Ошибка соединения.';
     }
 }
 </script>
