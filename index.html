@@ -11,10 +11,9 @@ header{padding:12px 16px;display:flex;justify-content:space-between;align-items:
 .brand{font-weight:700;font-size:17px;color:#818cf8}
 .clr{background:#262e4a;border:none;color:#cbd5e1;padding:6px 12px;border-radius:10px;font-size:12px;cursor:pointer}
 #chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:86%;padding:10px 14px;border-radius:16px;line-height:1.4;font-size:15px;white-space:pre-wrap;word-wrap:break-word}
+.m{max-width:86%;padding:10px 14px;border-radius:16px;line-height:1.45;font-size:15px;white-space:pre-wrap;word-wrap:break-word}
 .u{align-self:flex-end;background:#4f46e5}
 .a{align-self:flex-start;background:#1e253d;border:1px solid #2e385c}
-.yt{display:block;margin-top:8px;padding:8px 10px;background:#3f1820;border:1px solid #ef4444;border-radius:10px;color:#fca5a5;text-decoration:none;font-size:13px}
 #inp{display:flex;padding:10px;gap:8px;background:#161b2e;border-top:1px solid #262e4a}
 input{flex:1;padding:12px 15px;border-radius:22px;border:1px solid #2e385c;background:#0d101b;color:#fff;font-size:15px;outline:none}
 button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:#fff;font-weight:bold;cursor:pointer}
@@ -22,7 +21,7 @@ button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:
 </head>
 <body>
 <header><div class="brand">puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно — отвечу сам, решу задачу или подберу ролик на YouTube!</div></div>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно — отвечу сам как настоящая нейросеть!</div></div>
 <div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.keyCode===13)send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
 <script>
 var NL = String.fromCharCode(10);
@@ -39,16 +38,7 @@ function add(t, u) {
 
 function clr() {
     document.getElementById('chat').innerHTML = '';
-    add('Память очищена!', 0);
-}
-
-function addYT(div, q) {
-    var yt = document.createElement('a');
-    yt.className = 'yt';
-    yt.href = 'https://youtube.com' + encodeURIComponent(q);
-    yt.target = '_blank';
-    yt.textContent = 'Смотреть видео по теме на YouTube';
-    div.appendChild(yt);
+    add('Память очищена! Задавай новый вопрос.', 0);
 }
 
 function talk(t) {
@@ -57,7 +47,6 @@ function talk(t) {
     if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
     if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
     if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! О чём хочешь поговорить?';
-    if (m.indexOf('семпро') !== -1 || m.indexOf('sempron') !== -1) return 'AMD Sempron — бюджетный процессор от AMD.' + NL + NL + 'Что тянет: офис, браузер, фильмы и классические игры 2000-х (GTA San Andreas, CS 1.6, NFS Underground, Warcraft 3).';
     if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
         var r = 'Таблица умножения:' + NL;
         var nums = '2,3,4,5,6,7,8,9'.split(',');
@@ -80,52 +69,65 @@ function talk(t) {
     return null;
 }
 
-function searchWiki(q, box) {
-    var cl = q.toLowerCase().split('семпробн').join('Sempron').split('семпрон').join('Sempron').split('амд').join('AMD').split('?').join('').trim();
-    var cb = 'wcb_' + Math.floor(Math.random() * 999999);
-    var s = document.createElement('script');
-    var done = false;
-
-    window[cb] = function(sd) {
-        done = true;
-        s.remove();
-        var lst = (sd && sd.query && sd.query.search) ? sd.query.search : new Array();
-        if (lst.length) {
-            var title = lst.shift().title;
-            var cb2 = 'wcb2_' + Math.floor(Math.random() * 999999);
-            var s2 = document.createElement('script');
-            window[cb2] = function(pd) {
-                s2.remove();
-                var found = false;
-                if (pd && pd.query && pd.query.pages) {
-                    for (var k in pd.query.pages) {
-                        var pg = pd.query.pages[k];
-                        if (pg && pg.extract) {
-                            box.textContent = 'Вот что я нашёл:' + NL + NL + pg.extract;
-                            found = true;
-                        }
-                    }
-                }
-                if (!found) box.textContent = 'Вот подборка видео и обзоров по запросу «' + q + '»:';
-                addYT(box, q);
-            };
-            s2.src = 'https://wikipedia.org' + encodeURIComponent(title) + '&format=json&callback=' + cb2;
-            document.body.appendChild(s2);
-        } else {
-            box.textContent = 'Я проанализировал запрос «' + q + '» — посмотри видео и обзоры на YouTube по кнопке ниже!';
-            addYT(box, q);
+function httpReq(method, url, body, onOk, onErr) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.timeout = 12000;
+    if (body) xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200 && xhr.responseText && xhr.responseText.trim().length !== 0) {
+                onOk(xhr.responseText);
+            } else {
+                onErr();
+            }
         }
     };
+    xhr.ontimeout = onErr;
+    xhr.onerror = onErr;
+    xhr.send(body || null);
+}
 
-    setTimeout(function() {
-        if (!done) {
-            box.textContent = 'Посмотри подробный ответ и обзоры на YouTube по кнопке ниже!';
-            addYT(box, q);
-        }
-    }, 5000);
+function askAI(q, box) {
+    var sysPrompt = 'Тебя зовут puzik ai. Отвечай на русском языке живо, понятно и подробно на любой вопрос пользователя: ' + q;
+    var url1 = 'https://pollinations.ai' + encodeURIComponent(sysPrompt);
 
-    s.src = 'https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&callback=' + cb;
-    document.body.appendChild(s);
+    // 1. Пробуем нейросеть Pollinations напрямую
+    httpReq('GET', url1, null, function(txt) {
+        box.textContent = txt.trim();
+    }, function() {
+        // 2. Пробуем нейросеть LLM7 (GPT-4o-mini)
+        var payload = JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: new Array(
+                { role: 'system', content: 'Тебя зовут puzik ai. Отвечай по-русски, живо и по делу.' },
+                { role: 'user', content: q }
+            )
+        });
+        httpReq('POST', 'https://llm7.io', payload, function(raw) {
+            try {
+                var data = JSON.parse(raw);
+                var ans = data && data.choices && data.choices.length ? data.choices.shift().message.content : '';
+                if (ans) {
+                    box.textContent = ans.trim();
+                    return;
+                }
+            } catch (e) {}
+            tryProxy();
+        }, function() {
+            tryProxy();
+        });
+    });
+
+    // 3. Пробуем нейросеть через обходной прокси-шлюз CodeTabs
+    function tryProxy() {
+        var proxyUrl = 'https://codetabs.com' + encodeURIComponent(url1);
+        httpReq('GET', proxyUrl, null, function(txt2) {
+            box.textContent = txt2.trim();
+        }, function() {
+            box.textContent = 'Нейросети сейчас перегружены или заблокированы твоим провайдером без VPN. Попробуй отправить вопрос ещё раз!';
+        });
+    }
 }
 
 function send() {
@@ -134,13 +136,13 @@ function send() {
     if (!t) return;
     add(t, 1);
     inp.value = '';
-    var l = add('puzik ai думает...', 0);
+    var l = add('puzik ai печатает...', 0);
     var loc = talk(t);
     if (loc) {
         l.textContent = loc;
         return;
     }
-    searchWiki(t, l);
+    askAI(t, l);
 }
 </script>
 </body>
