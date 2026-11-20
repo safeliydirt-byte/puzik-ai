@@ -3,163 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>puzik ai PRO</title>
+<title>puzik ai</title>
 <style>
-body{font-family:sans-serif;background:#121212;color:#fff;margin:0;display:flex;flex-direction:column;height:100vh}
-header{padding:12px;text-align:center;font-weight:bold;background:#1e1e1e;border-bottom:1px solid #333}
-#chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.m{max-width:88%;padding:10px 14px;border-radius:16px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
-.u{align-self:flex-end;background:#2b5278}
-.a{align-self:flex-start;background:#252525}
-.more{margin-top:8px;padding:6px 12px;background:#3390ec;color:#fff;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-#inp{display:flex;padding:10px;gap:8px;background:#1e1e1e}
-input{flex:1;padding:12px;border-radius:20px;border:none;background:#2c2c2c;color:#fff;font-size:16px;outline:none}
-button.s{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#fff;font-weight:bold;cursor:pointer}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:radial-gradient(circle at top,#1a1f35,#0b0d14);color:#f0f2f8;margin:0;display:flex;flex-direction:column;height:100vh}
+header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;background:rgba(20,24,38,0.85);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.08)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ec4899);display:flex;align-items:center;justify-content:center;font-size:16px}
+.status{font-size:11px;color:#4ade80;font-weight:400;display:block}
+.clr{background:rgba(255,255,255,0.08);border:none;color:#aaa;padding:6px 12px;border-radius:12px;font-size:12px;cursor:pointer}
+#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.m{max-width:85%;padding:12px 16px;border-radius:18px;line-height:1.45;font-size:15px;white-space:pre-wrap;word-wrap:break-word;animation:pop 0.2s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.u{align-self:flex-end;background:linear-gradient(135deg,#4f46e5,#3b82f6);color:#fff;border-bottom-right-radius:4px}
+.a{align-self:flex-start;background:rgba(30,36,54,0.9);border:1px solid rgba(255,255,255,0.07);border-bottom-left-radius:4px}
+.more{margin-top:8px;padding:6px 12px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer}
+#inp{display:flex;padding:12px;gap:10px;background:rgba(16,20,32,0.95);border-top:1px solid rgba(255,255,255,0.08)}
+input{flex:1;padding:13px 16px;border-radius:24px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:15px;outline:none}
+input:focus{border-color:#6366f1}
+button.s{width:46px;height:46px;border-radius:50%;border:none;background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;font-size:18px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
-<header>🤖 puzik ai PRO (Веб + Форумы)</header>
-<div id="chat"><div class="m a">Привет! Я сканирую длинные вопросы целиком и ищу ответы по всему интернету, сайтам и форумам. Спрашивай!</div></div>
-<div id="inp"><input id="p" placeholder="Задай длинный вопрос..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">Отпр.</button></div>
+<header>
+ <div class="brand"><div class="avatar">✦</div><div>puzik ai<span class="status">● в сети</span></div></div>
+ <button class="clr" onclick="clearChat()">Очистить</button>
+</header>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Готов поболтать, решить задачу или найти ответ на любой сложный вопрос. О чём поговорим?</div></div>
+<div id="inp"><input id="p" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">➤</button></div>
 <script>
 var NL=String.fromCharCode(10),cache='',off=0;
 function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},7500);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
+function clearChat(){document.getElementById('chat').innerHTML='';add('Память очищена! С чего начнём?',0)}
+function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},7000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
+
+function aiPersona(text,topic){
+ var intros=['Вот что я выяснил по этому поводу:','Разобрался в вопросе! Смотри:','Отличный вопрос! Вот суть:','Нашёл для тебя точную информацию:'];
+ var outro=['Если нужно разобрать подробнее — спрашивай!','Хочешь узнать что-то ещё по этой теме?','Надеюсь, помог! Задавай следующий вопрос.'];
+ var i1=intros.sort(function(){return 0.5-Math.random()}).shift();
+ var i2=outro.sort(function(){return 0.5-Math.random()}).shift();
+ return i1+NL+NL+text+NL+NL+i2;
+}
 
 function talk(t){
  var m=t.toLowerCase().trim();
  if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
  if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! Напиши любой длинный вопрос — я просканирую сайты, форумы и базы знаний!';
- if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 Сегодня: '+new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
- if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ Сейчас: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
- if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='📊 Таблица умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+=NL}return r}
+ if(m==='привет'||m==='ку'||m==='здарова'||m==='хай')return 'Привет! Рад тебя видеть. Чем могу помочь сегодня?';
+ if(m.indexOf('как дела')!==-1||m.indexOf('как ты')!==-1)return 'У меня всё супер, нейроны работают на полную! А у тебя как настроение?';
+ if(m.indexOf('что делаешь')!==-1)return 'Анализирую терабайты данных и жду твоих интересных вопросов!';
+ if(m.indexOf('кто ты')!==-1||m.indexOf('тебя зовут')!==-1)return 'Я puzik ai — твой персональный ИИ-ассистент. Умею искать знания, решать примеры и просто болтать!';
+ if(m.indexOf('спасибо')!==-1||m.indexOf('благодар')!==-1)return 'Не за что! Всегда рад помочь.';
+ if(m.indexOf('молодец')!==-1||m.indexOf('крут')!==-1||m.indexOf('супер')!==-1)return 'Спасибо! Стараюсь держать марку.';
+ if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return 'Сегодня '+new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'. Отличный день!';
+ if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return 'Сейчас ровно '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'.';
+ if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='Держи полную таблицу умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+=NL}return r}
  var cl=m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
- if(cl.length>0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return '🧮 '+cl+' = '+v}catch(e){}}
+ if(cl.length>0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return 'Я посчитал!'+NL+cl+' = '+v+NL+'Если есть ещё задачки — кидай!'}catch(e){}}
  return null;
 }
 
-// Находит в длинном тексте абзац, который лучше всего отвечает на весь длинный вопрос
-function extractRelevantPart(fullText, query){
- var qWords=query.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ').filter(function(w){return w.length>3});
- if(qWords.length<2||fullText.length<1200)return fullText;
- var paras=fullText.split(NL);
- var bestIdx=0,bestScore=-1;
+function getParagraph(fullText,q){
+ var wds=q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ');
+ var keys=[];for(var i=0;i<wds.length;i++)if(wds[i].length>3)keys.push(wds[i].slice(0,-1));
+ if(keys.length<2||fullText.length<1000)return fullText;
+ var paras=fullText.split(NL),best=0,score=-1;
  for(var i=0;i<paras.length;i++){
-  var pLow=paras[i].toLowerCase(),score=0;
-  for(var j=0;j<qWords.length;j++){
-   if(pLow.indexOf(qWords[j].slice(0,-1))!==-1)score++;
-  }
-  if(score>bestScore){bestScore=score;bestIdx=i}
+  var p=paras[i].toLowerCase(),s=0;
+  for(var j=0;j<keys.length;j++)if(p.indexOf(keys[j])!==-1)s++;
+  if(s>score){score=s;best=i}
  }
- if(bestScore>0&&bestIdx>0){
-  return paras.slice(bestIdx,bestIdx+3).join(NL+NL);
- }
- return fullText;
+ return (score>0&&best>0)?paras.slice(best,best+2).join(NL+NL):fullText;
 }
 
-// 1. Поиск по всем сайтам, форумам и статьям через веб-индекс (Bing/Google/Reddit/Форумы через RSS-JSON и AllOrigins)
-async function searchWebAndForums(fullQuery){
- var results=[];
- // Поиск по форумам и обсуждениям (Reddit + веб-выдача)
- try{
-  var rRes=await fetch('https://reddit.com');
-  if(rRes.ok){
-   var rData=await rRes.json();
-   var posts=rData&&rData.data&&rData.data.children?rData.data.children:[];
-   for(var i=0;i<posts.length;i++){
-    var post=posts.slice(i,i+1).shift().data;
-    if(post&&post.title){
-     var body=post.selftext?post.selftext.substring(0,250)+'...':'';
-     results.push('💬 [Форум Reddit] '+post.title+(body?NL+body:''));
-    }
-   }
-  }
- }catch(e){}
-
- // Поиск по новостным и информационным сайтам рунета
- try{
-  var gUrl='https://google.com';
-  var nRes=await fetch('https://rss2json.com);
-  if(nRes.ok){
-   var nData=await nRes.json();
-   if(nData&&nData.items&&nData.items.length){
-    for(var j=0;j<Math.min(3,nData.items.length);j++){
-     var it=nData.items.slice(j,j+1).shift();
-     results.push('📰 [Сайт/СМИ] '+it.title);
-    }
-   }
-  }
- }catch(e){}
-
- return results;
-}
-
-// 2. Поиск по полной фразе в Википедии (без обрезания до первого слова!)
-async function searchFullPhraseWiki(lang,fullQuery){
+async function queryWiki(lang,q){
  var b='https://'+lang+'.wikipedia.org/w/api.php';
- // Передаем ВЕСЬ запрос целиком в поисковый движок Википедии
- var sd=await jsonp(b+'?action=query&list=search&srlimit=3&srwhat=text&srsearch='+encodeURIComponent(fullQuery)+'&format=json');
+ var sd=await jsonp(b+'?action=query&list=search&srlimit=3&srwhat=text&srsearch='+encodeURIComponent(q)+'&format=json');
  if(!sd||!sd.query||!sd.query.search||!sd.query.search.length)return null;
  var best=sd.query.search.shift();
  var pd=await jsonp(b+'?action=query&prop=extracts|pageimages&pithumbsize=400&explaintext=1&titles='+encodeURIComponent(best.title)+'&format=json');
  for(var k in pd.query.pages){
   var pg=pd.query.pages[k];
-  if(pg&&pg.extract){
-   var relevant=extractRelevantPart(pg.extract,fullQuery);
-   return{title:pg.title,text:relevant,full:pg.extract,img:pg.thumbnail?pg.thumbnail.source:null};
-  }
+  if(pg&&pg.extract)return{title:pg.title,rel:getParagraph(pg.extract,q),full:pg.extract,img:pg.thumbnail?pg.thumbnail.source:null};
  }
  return null;
 }
 
-async function deepScan(q){
- var webHits=await searchWebAndForums(q);
- var wikiHit=null;
+async function searchAll(q){
  try{
-  wikiHit=await searchFullPhraseWiki('ru',q)||await searchFullPhraseWiki('en',q);
+  var r=await queryWiki('ru',q)||await queryWiki('en',q);
+  if(r){
+   cache=r.full;off=1300;
+   var body=r.rel.substring(0,1300)+(r.rel.length>1300?'...':'');
+   return{text:aiPersona(body,r.title),img:r.img,more:r.full.length>1300};
+  }
+  var ddg=await jsonp('https://duckduckgo.com');
+  if(ddg&&ddg.AbstractText)return{text:aiPersona(ddg.AbstractText,q),img:ddg.Image||null,more:false};
  }catch(e){}
-
- var finalParts=[];
- var imgUrl=null;
- var hasMore=false;
-
- if(wikiHit){
-  cache=wikiHit.full;off=1500;
-  imgUrl=wikiHit.img;
-  hasMore=wikiHit.full.length>1500;
-  finalParts.push('📖 [Энциклопедия] '+wikiHit.title+':'+NL+wikiHit.text.substring(0,1500)+(wikiHit.text.length>1500?'...':''));
- }
-
- if(webHits.length>0){
-  finalParts.push('🌐 [Сайты и форумы]:'+NL+webHits.join(NL+NL));
- }
-
- if(finalParts.length>0){
-  return{text:finalParts.join(NL+NL+'──────────────'+NL+NL),img:imgUrl,more:hasMore};
- }
-
- return{text:'По полному запросу «'+q+'» точных совпадений на открытых форумах и в базах не нашлось.',img:null,more:false};
+ return{text:'Хм, интересный вопрос! Я просканировал свои базы по полному запросу, но точного ответа не нашёл. Попробуй задать вопрос иначе или спроси о другой теме!',img:null,more:false};
 }
 
 function moreBtn(div){
- var b=document.createElement('button');b.className='more';b.textContent='📄 Показать всю статью';
- b.onclick=function(){b.remove();var nx=cache.substring(off,off+1600);off+=1600;var nd=add(nx+(off<cache.length?'...':''),0);if(off<cache.length)moreBtn(nd)};
+ var b=document.createElement('button');b.className='more';b.textContent='Читать подробнее';
+ b.onclick=function(){b.remove();var nx=cache.substring(off,off+1400);off+=1400;var nd=add(nx+(off<cache.length?'...':''),0);if(off<cache.length)moreBtn(nd)};
  div.appendChild(document.createElement('br'));div.appendChild(b);
 }
 
 async function send(){
  var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
- add(t,1);inp.value='';var l=add('🌐 Сканирую сайты, форумы и статьи по всему запросу...',0);
+ add(t,1);inp.value='';var l=add('puzik ai печатает...',0);
  try{
   var loc=talk(t);
   if(loc){l.textContent=loc}else{
-   var r=await deepScan(t);l.textContent=r.text;
-   if(r.img){var im=document.createElement('img');im.src=r.img;im.style.cssText='max-width:100%;border-radius:12px;margin-top:8px;display:block';l.appendChild(im)}
+   var r=await searchAll(t);l.textContent=r.text;
+   if(r.img){var im=document.createElement('img');im.src=r.img;im.style.cssText='max-width:100%;border-radius:12px;margin-top:10px;display:block';l.appendChild(im)}
    if(r.more)moreBtn(l);
   }
- }catch(e){l.textContent='Ошибка при сканировании сети.'}
+ }catch(e){l.textContent='Небольшой сбой связи, попробуй спросить ещё раз!'}
 }
 </script>
 </body>
