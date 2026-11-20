@@ -23,68 +23,124 @@ button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:
 <body>
 <header><div class="brand">puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
 <div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно — отвечу сам, решу задачу или подберу ролик на YouTube!</div></div>
-<div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
+<div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.keyCode===13)send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
 <script>
-var NL=String.fromCharCode(10),hist=new Array();
-function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-function clr(){document.getElementById('chat').innerHTML='';hist=new Array();add('Память очищена!',0)}
-function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},6000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
+var NL = String.fromCharCode(10);
 
-function talk(t){
- var m=t.toLowerCase().trim();
- if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
- if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
- if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! О чём хочешь поговорить?';
- if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){
-  var r='Таблица умножения:'+NL,nums='2,3,4,5,6,7,8,9'.split(','),mults='1,2,3,4,5,6,7,8,9,10'.split(',');
-  nums.forEach(function(i){mults.forEach(function(j){r+=i+'*'+j+'='+(Number(i)*Number(j))+' '});r+=NL});
-  return r;
- }
- var cl=m.split('реши').join('').split('посчитай').join('').split(':').join('/').split(',').join('.').trim();
- if(cl.length!==0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return 'Ответ: '+v}catch(e){}}
- return null;
+function add(t, u) {
+    var c = document.getElementById('chat');
+    var d = document.createElement('div');
+    d.className = 'm ' + (u ? 'u' : 'a');
+    d.textContent = t;
+    c.appendChild(d);
+    c.scrollTop = c.scrollHeight;
+    return d;
 }
 
-async function generateAI(q){
- hist.push({role:'user',content:q});
- if(hist.length===7)hist.shift();
- var msgs=new Array({role:'system',content:'Тебя зовут puzik ai. Отвечай по-русски, живо и по делу.'}).concat(hist);
-
- try{
-  var r1=await fetch('https://llm7.io',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o-mini',messages:msgs})});
-  if(r1.ok){var d1=await r1.json(),ans1=d1&&d1.choices&&d1.choices.length?d1.choices.shift().message.content:'';if(ans1){hist.push({role:'assistant',content:ans1});return ans1}}
- }catch(e){}
-
- try{
-  var r2=await fetch('https://pollinations.ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,model:'openai',private:true})});
-  if(r2.ok){var ans2=await r2.text();if(ans2&&ans2.trim()){hist.push({role:'assistant',content:ans2.trim()});return ans2.trim()}}
- }catch(e){}
-
- try{
-  var cl=q.toLowerCase().split('семпробн').join('Sempron').split('семпрон').join('Sempron').split('амд').join('AMD').split('?').join('').trim();
-  var sd=await jsonp('https://wikipedia.org');
-  var lst=(sd&&sd.query&&sd.query.search)?sd.query.search:new Array();
-  if(lst.length){
-   var pd=await jsonp('https://wikipedia.org(lst.shift().title)+'&format=json');
-   for(var k in pd.query.pages){var pg=pd.query.pages[k];if(pg&&pg.extract)return 'Вот что я знаю об этом:'+NL+NL+pg.extract}
-  }
- }catch(e){}
-
- var low=q.toLowerCase();
- if(low.indexOf('семпро')!==-1||low.indexOf('sempron')!==-1)return 'AMD Sempron — бюджетная линейка процессоров от AMD (с 2004 года).'+NL+NL+'Что он тянет: офис, браузер (1-2 вкладки), фильмы и классические игры 2000-х (GTA San Andreas, CS 1.6, NFS Underground, Warcraft 3).';
- return 'Я проанализировал твой запрос — посмотри подборку обзоров и видео на YouTube по кнопке ниже!';
+function clr() {
+    document.getElementById('chat').innerHTML = '';
+    add('Память очищена!', 0);
 }
 
-async function send(){
- var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
- add(t,1);inp.value='';var l=add('puzik ai думает...',0);
- try{
-  var loc=talk(t);if(loc){l.textContent=loc;return}
-  l.textContent=await generateAI(t);
-  var yt=document.createElement('a');yt.className='yt';yt.href='https://youtube.com';
-  yt.textContent='Смотреть видео по теме на YouTube';l.appendChild(yt);
- }catch(e){l.textContent='Ошибка генерации.'}
+function addYT(div, q) {
+    var yt = document.createElement('a');
+    yt.className = 'yt';
+    yt.href = 'https://youtube.com' + encodeURIComponent(q);
+    yt.target = '_blank';
+    yt.textContent = 'Смотреть видео по теме на YouTube';
+    div.appendChild(yt);
+}
+
+function talk(t) {
+    var m = t.toLowerCase().trim();
+    if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) return 'Месси, потому что я его парень';
+    if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
+    if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
+    if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! О чём хочешь поговорить?';
+    if (m.indexOf('семпро') !== -1 || m.indexOf('sempron') !== -1) return 'AMD Sempron — бюджетный процессор от AMD.' + NL + NL + 'Что тянет: офис, браузер, фильмы и классические игры 2000-х (GTA San Andreas, CS 1.6, NFS Underground, Warcraft 3).';
+    if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
+        var r = 'Таблица умножения:' + NL;
+        var nums = '2,3,4,5,6,7,8,9'.split(',');
+        var mults = '1,2,3,4,5,6,7,8,9,10'.split(',');
+        for (var i = 0; i < nums.length; i++) {
+            for (var j = 0; j < mults.length; j++) {
+                r += nums.slice(i, i + 1) + '*' + mults.slice(j, j + 1) + '=' + (Number(nums.slice(i, i + 1)) * Number(mults.slice(j, j + 1))) + ' ';
+            }
+            r += NL;
+        }
+        return r;
+    }
+    var cl = m.split('реши').join('').split('посчитай').join('').split(':').join('/').split(',').join('.').trim();
+    if (cl.length !== 0 && '0123456789('.indexOf(cl.charAt(0)) !== -1) {
+        try {
+            var v = Function('return(' + cl + ')')();
+            if (typeof v === 'number' && isFinite(v)) return 'Ответ: ' + v;
+        } catch (e) {}
+    }
+    return null;
+}
+
+function searchWiki(q, box) {
+    var cl = q.toLowerCase().split('семпробн').join('Sempron').split('семпрон').join('Sempron').split('амд').join('AMD').split('?').join('').trim();
+    var cb = 'wcb_' + Math.floor(Math.random() * 999999);
+    var s = document.createElement('script');
+    var done = false;
+
+    window[cb] = function(sd) {
+        done = true;
+        s.remove();
+        var lst = (sd && sd.query && sd.query.search) ? sd.query.search : new Array();
+        if (lst.length) {
+            var title = lst.shift().title;
+            var cb2 = 'wcb2_' + Math.floor(Math.random() * 999999);
+            var s2 = document.createElement('script');
+            window[cb2] = function(pd) {
+                s2.remove();
+                var found = false;
+                if (pd && pd.query && pd.query.pages) {
+                    for (var k in pd.query.pages) {
+                        var pg = pd.query.pages[k];
+                        if (pg && pg.extract) {
+                            box.textContent = 'Вот что я нашёл:' + NL + NL + pg.extract;
+                            found = true;
+                        }
+                    }
+                }
+                if (!found) box.textContent = 'Вот подборка видео и обзоров по запросу «' + q + '»:';
+                addYT(box, q);
+            };
+            s2.src = 'https://wikipedia.org' + encodeURIComponent(title) + '&format=json&callback=' + cb2;
+            document.body.appendChild(s2);
+        } else {
+            box.textContent = 'Я проанализировал запрос «' + q + '» — посмотри видео и обзоры на YouTube по кнопке ниже!';
+            addYT(box, q);
+        }
+    };
+
+    setTimeout(function() {
+        if (!done) {
+            box.textContent = 'Посмотри подробный ответ и обзоры на YouTube по кнопке ниже!';
+            addYT(box, q);
+        }
+    }, 5000);
+
+    s.src = 'https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&callback=' + cb;
+    document.body.appendChild(s);
+}
+
+function send() {
+    var inp = document.getElementById('p');
+    var t = inp.value.trim();
+    if (!t) return;
+    add(t, 1);
+    inp.value = '';
+    var l = add('puzik ai думает...', 0);
+    var loc = talk(t);
+    if (loc) {
+        l.textContent = loc;
+        return;
+    }
+    searchWiki(t, l);
 }
 </script>
 </body>
