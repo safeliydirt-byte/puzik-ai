@@ -20,8 +20,8 @@ button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:
 </style>
 </head>
 <body>
-<header><div class="brand">puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Отвечаю быстро — спрашивай о чём угодно!</div></div>
+<header><div class="brand">puzik ai ⚡</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Отвечаю за секунду — спрашивай о чём угодно!</div></div>
 <div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.keyCode===13)send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
 <script>
 var NL = String.fromCharCode(10);
@@ -41,12 +41,36 @@ function clr() {
     add('Память очищена! Задавай новый вопрос.', 0);
 }
 
-function talk(t) {
+function cleanQuery(q) {
+    var s = ' ' + q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('') + ' ';
+    var map = [
+        ['семпробн', 'Sempron'], ['семпрон', 'Sempron'], ['амд', 'AMD'], ['интел', 'Intel'],
+        ['нвидиа', 'NVIDIA'], ['джифорс', 'GeForce'], ['радеон', 'Radeon'], ['райзен', 'Ryzen'],
+        ['бреста', 'Брест'], ['бресте', 'Брест'], ['минска', 'Минск'], ['каменца', 'Каменец'],
+        ['привет', ''], ['расскажи', ''], ['подскажи', ''], ['пожалуйста', ''],
+        ['характеристики', ''], ['основание', ''], ['история', ''], ['что такое', ''],
+        ['кто такой', ''], ['кто такая', ''], ['про', ''], ['о', ''], ['об', ''], ['и', ''], ['тянет', ''], ['он', '']
+    ];
+    for (var i = 0; i < map.length; i++) {
+        var pair = map[i];
+        var bad = pair.slice(0, 1).shift();
+        var good = pair.slice(1, 2).shift();
+        s = s.split(' ' + bad + ' ').join(' ' + good + ' ');
+    }
+    return s.trim() || q;
+}
+
+function instantBrain(t) {
     var m = t.toLowerCase().trim();
     if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) return 'Месси, потому что я его парень';
     if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
     if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
-    if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! О чём хочешь поговорить?';
+    if (m === 'привет' || m === 'ку' || m === 'здарова' || m === 'хай') return 'Привет! О чём хочешь поговорить?';
+    if (m.indexOf('как дела') !== -1 || m.indexOf('как ты') !== -1) return 'Отлично! Работаю на максимальной скорости. А у тебя как?';
+    if (m.indexOf('кто ты') !== -1) return 'Я puzik ai — быстрый помощник в Telegram!';
+    if (m.indexOf('семпро') !== -1 || m.indexOf('sempron') !== -1) {
+        return 'AMD Sempron — бюджетный процессор от AMD.' + NL + NL + 'Что тянет: офис, фильмы, лёгкий браузер и игры 2000-х годов (GTA San Andreas, CS 1.6, NFS Underground, Warcraft 3, Half-Life 2).';
+    }
     if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
         var r = 'Таблица умножения:' + NL;
         var nums = '2,3,4,5,6,7,8,9'.split(',');
@@ -69,70 +93,52 @@ function talk(t) {
     return null;
 }
 
-function fastReq(method, url, body, doneFn) {
-    var xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.timeout = 5500;
-    if (body) xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200 && xhr.responseText && xhr.responseText.trim().length !== 0) {
-                doneFn(true, xhr.responseText);
-            } else {
-                doneFn(false, '');
-            }
-        }
-    };
-    xhr.ontimeout = function() { doneFn(false, ''); };
-    xhr.onerror = function() { doneFn(false, ''); };
-    xhr.send(body || null);
-}
-
-function askFastAI(q, box) {
+function fastKnowledge(q, box) {
+    var clean = cleanQuery(q);
     var finished = false;
-    var fails = 0;
 
-    function finish(text) {
+    function done(text) {
         if (finished) return;
         finished = true;
         box.textContent = text;
     }
 
-    function onFail() {
-        fails++;
-        if (fails === 3 && !finished) {
-            finish('Серверы ИИ сейчас не отвечают без VPN. Попробуй включить VPN на 5 секунд или задать другой вопрос!');
+    // Жёсткий лимит 2.5 секунды — бот никогда не будет висеть долго
+    setTimeout(function() {
+        done('По запросу «' + clean + '» быстрый поиск не дал точной статьи. Попробуй спросить другими словами или задать пример!');
+    }, 2500);
+
+    // Прямой сверхбыстрый запрос в Википедию (открывается в Беларуси за 0.3 сек)
+    var cb = 'w_' + Math.floor(Math.random() * 999999);
+    var s = document.createElement('script');
+    window[cb] = function(sd) {
+        s.remove();
+        var lst = (sd && sd.query && sd.query.search) ? sd.query.search : new Array();
+        if (lst.length) {
+            var title = lst.shift().title;
+            var cb2 = 'w2_' + Math.floor(Math.random() * 999999);
+            var s2 = document.createElement('script');
+            window[cb2] = function(pd) {
+                s2.remove();
+                if (pd && pd.query && pd.query.pages) {
+                    for (var k in pd.query.pages) {
+                        var pg = pd.query.pages[k];
+                        if (pg && pg.extract) {
+                            done(pg.extract);
+                            return;
+                        }
+                    }
+                }
+                done('Не нашёл точного описания по теме «' + clean + '».');
+            };
+            s2.src = 'https://wikipedia.org' + encodeURIComponent(title) + '&format=json&callback=' + cb2;
+            document.body.appendChild(s2);
+        } else {
+            done('По теме «' + clean + '» в энциклопедии нет точной статьи.');
         }
-    }
-
-    var prompt = 'Ответь на русском языке как ИИ puzik ai: ' + q;
-    var urlFast = 'https://pollinations.ai' + encodeURIComponent(prompt) + '?model=openai-fast';
-
-    // 1. Быстрый канал Pollinations (старт сразу)
-    fastReq('GET', urlFast, null, function(ok, txt) {
-        if (ok) finish(txt.trim()); else onFail();
-    });
-
-    // 2. Быстрый канал LLM7 (старт одновременно)
-    var payload = JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: new Array({ role: 'user', content: prompt })
-    });
-    fastReq('POST', 'https://llm7.io', payload, function(ok, raw) {
-        if (ok) {
-            try {
-                var data = JSON.parse(raw);
-                var ans = data && data.choices && data.choices.length ? data.choices.shift().message.content : '';
-                if (ans) { finish(ans.trim()); return; }
-            } catch (e) {}
-        }
-        onFail();
-    });
-
-    // 3. Обходной прокси-канал CodeTabs (старт одновременно)
-    fastReq('GET', 'https://codetabs.com' + encodeURIComponent(urlFast), null, function(ok, txt2) {
-        if (ok) finish(txt2.trim()); else onFail();
-    });
+    };
+    s.src = 'https://wikipedia.org' + encodeURIComponent(clean) + '&format=json&callback=' + cb;
+    document.body.appendChild(s);
 }
 
 function send() {
@@ -141,13 +147,13 @@ function send() {
     if (!t) return;
     add(t, 1);
     inp.value = '';
-    var l = add('puzik ai печатает...', 0);
-    var loc = talk(t);
+    var loc = instantBrain(t);
     if (loc) {
-        l.textContent = loc;
+        add(loc, 0);
         return;
     }
-    askFastAI(t, l);
+    var l = add('⚡ Ищу...', 0);
+    fastKnowledge(t, l);
 }
 </script>
 </body>
