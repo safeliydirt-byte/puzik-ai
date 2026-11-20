@@ -25,9 +25,9 @@ button.s{padding:0 18px;border-radius:22px;border:none;background:#6366f1;color:
 <div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай о чём угодно — отвечу сам, решу задачу или подберу ролик на YouTube!</div></div>
 <div id="inp"><input id="p" type="text" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
 <script>
-var NL=String.fromCharCode(10),hist=[];
+var NL=String.fromCharCode(10),hist=new Array();
 function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-function clr(){document.getElementById('chat').innerHTML='';hist=[];add('Память очищена!',0)}
+function clr(){document.getElementById('chat').innerHTML='';hist=new Array();add('Память очищена!',0)}
 function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},6000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
 
 function talk(t){
@@ -37,8 +37,8 @@ function talk(t){
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
  if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! О чём хочешь поговорить?';
  if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){
-  var r='Таблица умножения:'+NL,nums=[2,3,4,5,6,7,8,9],mults=[1,2,3,4,5,6,7,8,9,10];
-  nums.forEach(function(i){mults.forEach(function(j){r+=i+'*'+j+'='+(i*j)+' '});r+=NL});
+  var r='Таблица умножения:'+NL,nums='2,3,4,5,6,7,8,9'.split(','),mults='1,2,3,4,5,6,7,8,9,10'.split(',');
+  nums.forEach(function(i){mults.forEach(function(j){r+=i+'*'+j+'='+(Number(i)*Number(j))+' '});r+=NL});
   return r;
  }
  var cl=m.split('реши').join('').split('посчитай').join('').split(':').join('/').split(',').join('.').trim();
@@ -49,7 +49,7 @@ function talk(t){
 async function generateAI(q){
  hist.push({role:'user',content:q});
  if(hist.length===7)hist.shift();
- var msgs=[{role:'system',content:'Тебя зовут puzik ai. Отвечай по-русски, живо и по делу.'}].concat(hist);
+ var msgs=new Array({role:'system',content:'Тебя зовут puzik ai. Отвечай по-русски, живо и по делу.'}).concat(hist);
 
  try{
   var r1=await fetch('https://llm7.io',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o-mini',messages:msgs})});
@@ -64,7 +64,7 @@ async function generateAI(q){
  try{
   var cl=q.toLowerCase().split('семпробн').join('Sempron').split('семпрон').join('Sempron').split('амд').join('AMD').split('?').join('').trim();
   var sd=await jsonp('https://wikipedia.org');
-  var lst=(sd&&sd.query&&sd.query.search)?sd.query.search:[];
+  var lst=(sd&&sd.query&&sd.query.search)?sd.query.search:new Array();
   if(lst.length){
    var pd=await jsonp('https://wikipedia.org(lst.shift().title)+'&format=json');
    for(var k in pd.query.pages){var pg=pd.query.pages[k];if(pg&&pg.extract)return 'Вот что я знаю об этом:'+NL+NL+pg.extract}
