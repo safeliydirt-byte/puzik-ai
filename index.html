@@ -6,140 +6,91 @@
 <title>puzik ai</title>
 <style>
 body{font-family:sans-serif;background:#121212;color:#fff;margin:0;display:flex;flex-direction:column;height:100vh}
-header{padding:12px;text-align:center;font-weight:bold;font-size:18px;background:#1e1e1e;border-bottom:1px solid #333}
-#chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:85%;padding:10px 14px;border-radius:16px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+header{padding:12px;text-align:center;font-weight:bold;background:#1e1e1e;border-bottom:1px solid #333}
+#chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:88%;padding:10px 14px;border-radius:16px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
 .u{align-self:flex-end;background:#2b5278}
 .a{align-self:flex-start;background:#252525}
-#chips{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;background:#181818;border-top:1px solid #2a2a2a}
-.chip{background:#2c2c2c;color:#ddd;border:none;border-radius:14px;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
+.more{margin-top:8px;padding:6px 12px;background:#3390ec;color:#fff;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
 #inp{display:flex;padding:10px;gap:8px;background:#1e1e1e}
 input{flex:1;padding:12px;border-radius:20px;border:none;background:#2c2c2c;color:#fff;font-size:16px;outline:none}
-button.send{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#fff;font-weight:bold;cursor:pointer}
+button.s{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#fff;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
-<header>🤖 puzik ai (Википедия)</header>
-<div id="chat"><div class="m a">Привет! Я puzik ai. Спроси меня о любом городе, человеке, событии или предмете — я найду ответ в Википедии!</div></div>
-<div id="chips">
-    <button class="chip" onclick="quick('Брест')">🏰 Брест</button>
-    <button class="chip" onclick="quick('Каменецкая башня')">🗼 Каменец</button>
-    <button class="chip" onclick="quick('Солнечная система')">🪐 Космос</button>
-    <button class="chip" onclick="quick('Таблица умножения')">📊 Таблица</button>
-</div>
-<div id="inp">
-    <input id="p" placeholder="Например: кто такой Илон Маск..." onkeydown="if(event.key==='Enter')send()">
-    <button class="send" onclick="send()">Отпр.</button>
-</div>
+<header>🤖 puzik ai</header>
+<div id="chat"><div class="m a">Привет! Я puzik ai. Спрашивай что угодно из Википедии!</div></div>
+<div id="inp"><input id="p" placeholder="Задай вопрос..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">Отпр.</button></div>
 <script>
-var NL = String.fromCharCode(10);
+var NL=String.fromCharCode(10),cache='',off=0;
+function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
+function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},7000);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+'&callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
 
-function add(t, u) {
-    var c = document.getElementById('chat'), d = document.createElement('div');
-    d.className = 'm ' + (u ? 'u' : 'a');
-    d.textContent = t;
-    c.appendChild(d);
-    c.scrollTop = c.scrollHeight;
-    return d;
+function local(t){
+ var m=t.toLowerCase().trim();
+ if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
+ if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
+ if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
+ if(m==='привет'||m==='ку')return 'Привет! Задай любой вопрос — найду в Википедии!';
+ if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 '+new Date().toLocaleDateString('ru-RU');
+ if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ '+new Date().toLocaleTimeString('ru-RU');
+ if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='📊 Таблица умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+=NL}return r}
+ var cl=m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
+ if(cl.length>0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return '🧮 '+cl+' = '+v}catch(e){}}
+ return null;
 }
 
-function quick(text) {
-    document.getElementById('p').value = text;
-    send();
+async function searchWiki(lang,q){
+ var b='https://'+lang+'.wikipedia.org/w/api.php';
+ var sd=await jsonp(b+'?action=query&list=search&srlimit=4&srsearch='+encodeURIComponent(q)+'&format=json');
+ if(!sd||!sd.query||!sd.query.search||!sd.query.search.length)return null;
+ var lst=sd.query.search,best=lst.shift();
+ var pd=await jsonp(b+'?action=query&prop=extracts|pageimages&pithumbsize=400&explaintext=1&titles='+encodeURIComponent(best.title)+'&format=json');
+ for(var k in pd.query.pages){
+  var pg=pd.query.pages[k];
+  if(pg&&pg.extract)return{title:pg.title,text:pg.extract,img:pg.thumbnail?pg.thumbnail.source:null,rel:lst};
+ }
+ return null;
 }
 
-function jsonp(url) {
-    return new Promise(function(resolve, reject) {
-        var cb = 'wcb_' + Math.floor(Math.random() * 1000000);
-        var s = document.createElement('script');
-        var t = setTimeout(function() { delete window[cb]; s.remove(); reject(); }, 7000);
-        window[cb] = function(d) { clearTimeout(t); delete window[cb]; s.remove(); resolve(d); };
-        s.src = url + '&callback=' + cb;
-        s.onerror = function() { clearTimeout(t); delete window[cb]; s.remove(); reject(); };
-        document.body.appendChild(s);
-    });
+async function wiki(q){
+ var stop=['что','такое','кто','такой','такая','расскажи','про','подскажи','пожалуйста','когда','где','как','основали','основан','история','основание','мне','о','об','в','на','найди'];
+ var wds=q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' '),ks=[];
+ for(var i=0;i<wds.length;i++){
+  var w=wds[i];
+  if(w==='бреста'||w==='бресте')w='Брест';if(w==='минска')w='Минск';if(w==='каменца')w='Каменец';
+  if(w.length>2&&stop.indexOf(w)===-1)ks.push(w);
+ }
+ var s=ks.join(' ')||q;
+ try{
+  var r=await searchWiki('ru',s)||await searchWiki('en',s);
+  if(r){
+   cache=r.text;off=1500;
+   var out='📖 '+r.title+':'+NL+r.text.substring(0,1500)+(r.text.length>1500?'...':'');
+   if(r.rel.length){var rm=[];for(var j=0;j<Math.min(3,r.rel.length);j++)rm.push(r.rel.slice(j,j+1).shift().title);out+=NL+NL+'🔎 Похожее: '+rm.join(', ')}
+   return{text:out,img:r.img,more:r.text.length>1500};
+  }
+ }catch(e){}
+ return{text:'По запросу «'+s+'» ничего не нашлось. Напиши проще!',img:null,more:false};
 }
 
-function getLocal(t) {
-    var m = t.toLowerCase().trim();
-    if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) return 'Месси, потому что я его парень';
-    if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
-    if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
-    if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Напиши любое слово или вопрос — я найду статью в Википедии!';
-    if (m.indexOf('сегодня') !== -1 && (m.indexOf('день') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1)) return '📅 Сегодня: ' + new Date().toLocaleDateString('ru-RU');
-    if (m.indexOf('время') !== -1 || m.indexOf('который час') !== -1) return '⏰ Сейчас: ' + new Date().toLocaleTimeString('ru-RU');
-    if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
-        var r = '📊 Таблица умножения:' + NL;
-        for (var i = 2; i <= 9; i++) {
-            for (var j = 1; j <= 10; j++) r += i + '×' + j + '=' + (i * j) + ' ';
-            r += NL;
-        }
-        return r;
-    }
-    var clean = m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
-    if (clean.length > 0 && '0123456789('.indexOf(clean.charAt(0)) !== -1) {
-        try {
-            var res = Function('return(' + clean + ')')();
-            if (typeof res === 'number' && isFinite(res)) return '🧮 ' + clean + ' = ' + res;
-        } catch (e) {}
-    }
-    return null;
+function moreBtn(div){
+ var b=document.createElement('button');b.className='more';b.textContent='📄 Читать дальше';
+ b.onclick=function(){b.remove();var nx=cache.substring(off,off+1500);off+=1500;var nd=add(nx+(off<cache.length?'...':''),0);if(off<cache.length)moreBtn(nd)};
+ div.appendChild(document.createElement('br'));div.appendChild(b);
 }
 
-async function wiki(q) {
-    var low = q.toLowerCase();
-    var stop = ['что', 'такое', 'кто', 'такой', 'такая', 'такие', 'расскажи', 'про', 'подскажи', 'пожалуйста', 'почему', 'зачем', 'когда', 'где', 'как', 'появился', 'основали', 'основан', 'история', 'основание', 'вообще', 'мне', 'о', 'об', 'в', 'на', 'из', 'за', 'новости'];
-    var words = low.split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ');
-    var keys = [];
-    for (var i = 0; i < words.length; i++) {
-        var w = words[i];
-        if (w === 'бреста' || w === 'бресте') w = 'Брест';
-        if (w === 'минска' || w === 'минске') w = 'Минск';
-        if (w === 'каменца' || w === 'каменце') w = 'Каменец';
-        if (w.length > 2 && stop.indexOf(w) === -1) keys.push(w);
-    }
-    var search = keys.join(' ') || q;
-
-    try {
-        var sData = await jsonp('https://wikipedia.org' + encodeURIComponent(search) + '&format=json');
-        if (sData && sData.query && sData.query.search && sData.query.search.length > 0) {
-            var list = sData.query.search;
-            var best = list.shift();
-            var pData = await jsonp('https://wikipedia.org' + encodeURIComponent(best.title) + '&format=json');
-            var ans = '';
-            if (pData && pData.query && pData.query.pages) {
-                for (var k in pData.query.pages) {
-                    if (pData.query.pages[k] && pData.query.pages[k].extract) {
-                        var txt = pData.query.pages[k].extract;
-                        if (txt.length > 750) txt = txt.substring(0, 750) + '...';
-                        ans = '📖 ' + pData.query.pages[k].title + ':' + NL + txt;
-                    }
-                }
-            }
-            if (list.length > 0 && ans) {
-                ans += NL + NL + '🔎 Похожие темы: ';
-                var others = [];
-                for (var j = 0; j < Math.min(2, list.length); j++) others.push(list.slice(j, j + 1).shift().title);
-                ans += others.join(', ');
-            }
-            if (ans) return ans;
-        }
-    } catch (e) {}
-
-    return 'В Википедии по запросу «' + search + '» ничего не нашлось. Попробуй написать проще — одним или двумя словами (например: «Брестская крепость» или «Юрий Гагарин»)!';
-}
-
-async function send() {
-    var inp = document.getElementById('p'), t = inp.value.trim();
-    if (!t) return;
-    add(t, 1);
-    inp.value = '';
-    var l = add('📖 Ищу в Википедии...', 0);
-    try {
-        l.textContent = getLocal(t) || await wiki(t);
-    } catch (e) {
-        l.textContent = 'Ошибка поиска в Википедии.';
-    }
+async function send(){
+ var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
+ add(t,1);inp.value='';var l=add('📖 Ищу...',0);
+ try{
+  var loc=local(t);
+  if(loc){l.textContent=loc}else{
+   var r=await wiki(t);l.textContent=r.text;
+   if(r.img){var im=document.createElement('img');im.src=r.img;im.style.cssText='max-width:100%;border-radius:12px;margin-top:8px;display:block';l.appendChild(im)}
+   if(r.more)moreBtn(l);
+  }
+ }catch(e){l.textContent='Ошибка поиска.'}
 }
 </script>
 </body>
