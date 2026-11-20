@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>puzik ai</title>
 <style>
 body{font-family:sans-serif;background:#121212;color:#fff;margin:0;display:flex;flex-direction:column;height:100vh}
@@ -17,183 +17,78 @@ button{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#f
 </style>
 </head>
 <body>
-<header>🤖 puzik ai v3</header>
+<header>🤖 puzik ai v4</header>
 <div id="chat"></div>
-<div id="inp">
-    <input id="p" type="text" placeholder="Задай вопрос, новость или задачу..." onkeydown="if(event.key==='Enter')send()">
-    <button id="btn" type="button" onclick="send()">Отпр.</button>
-</div>
+<div id="inp"><input id="p" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Отпр.</button></div>
 <script>
-function add(t, u) {
-    var chat = document.getElementById('chat');
-    var d = document.createElement('div');
-    d.className = 'm ' + (u ? 'u' : 'a');
-    d.textContent = t;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
-    return d;
+function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
+
+function math(t){
+ var c=t.toLowerCase().replace(/^(реши|посчитай|вычисли|сколько будет)\s*[:=-]?\s*/i,'').replace(/,/g,'.').replace(/×/g,'*').replace(/х/g,'x').replace(/:/g,'/').trim();
+ if(c.indexOf('=')!==-1&&c.indexOf('x')!==-1){
+  var s=c.split('=');
+  if(s.length===2){
+   var ps=function(e){var n=e.replace(/\s+/g,'');if(n.charAt(0)!=='+'&&n.charAt(0)!=='-')n='+'+n;var tm=n.match(/[+-][^+-]+/g)||[],kx=0,kc=0;while(tm.length){var m=tm.shift();if(m.indexOf('x')!==-1){var v=m.replace('*x','').replace('x','');kx+=(v==='+'||v==='')?1:(v==='-'?-1:parseFloat(v))}else kc+=parseFloat(m)}return{kx:kx,kc:kc}};
+   var l=ps(s.shift()),r=ps(s.shift()),tx=l.kx-r.kx,tc=r.kc-l.kc;
+   if(tx!==0&&!isNaN(tx)&&!isNaN(tc))return '🧮 '+tx+'x = '+tc+'\n✅ x = '+Number((tc/tx).toFixed(4));
+  }
+ }
+ var ex=c.replace(/\^/g,'**').replace(/sqrt\(/g,'Math.sqrt(');
+ if(/^[0-9+\-*/().\s*Mathsqrt]+$/.test(ex)&&/[0-9]/.test(ex)&&/[+\-*/]|sqrt/.test(ex)){
+  try{var r=Function('"use strict";return('+ex+')')();if(typeof r==='number'&&isFinite(r))return '🧮 '+c+' = '+Number(r.toFixed(6))}catch(e){}
+ }
+ return null;
 }
 
-function solveMath(t) {
-    var c = t.toLowerCase()
-        .replace(/^(реши|посчитай|вычисли|сколько будет|уравнение|пример)\s*[:=-]?\s*/i, '')
-        .replace(/,/g, '.')
-        .replace(/×/g, '*')
-        .replace(/х/g, 'x')
-        .replace(/:/g, '/')
-        .trim();
-
-    if (c.indexOf('=') !== -1 && c.indexOf('x') !== -1) {
-        var s = c.split('=');
-        if (s.length === 2) {
-            var parseSide = function(e) {
-                var norm = e.replace(/\s+/g, '');
-                if (norm.charAt(0) !== '+' && norm.charAt(0) !== '-') norm = '+' + norm;
-                var terms = norm.match(/[+-][^+-]+/g) || [];
-                var kx = 0, kc = 0;
-                while (terms.length > 0) {
-                    var m = terms.shift();
-                    if (m.indexOf('x') !== -1) {
-                        var v = m.replace('*x', '').replace('x', '');
-                        if (v === '+' || v === '') kx += 1;
-                        else if (v === '-') kx -= 1;
-                        else kx += parseFloat(v);
-                    } else {
-                        kc += parseFloat(m);
-                    }
-                }
-                return { kx: kx, kc: kc };
-            };
-            var l = parseSide(s.shift());
-            var r = parseSide(s.shift());
-            var tx = l.kx - r.kx;
-            var tc = r.kc - l.kc;
-            if (tx !== 0 && !isNaN(tx) && !isNaN(tc)) {
-                return '🧮 Решение:\n' + tx + 'x = ' + tc + '\n✅ Ответ: x = ' + Number((tc / tx).toFixed(4));
-            }
-        }
-    }
-
-    var ex = c.replace(/\^/g, '**').replace(/sqrt\(/g, 'Math.sqrt(');
-    if (/^[0-9+\-*/().\s*Mathsqrt]+$/.test(ex) && /[0-9]/.test(ex) && /[+\-*/]|sqrt/.test(ex)) {
-        try {
-            var res = Function('"use strict";return(' + ex + ')')();
-            if (typeof res === 'number' && isFinite(res)) {
-                return '🧮 Решение:\n' + c + ' = ' + Number(res.toFixed(6)) + '\n✅ Ответ: ' + Number(res.toFixed(6));
-            }
-        } catch (e) {}
-    }
-    return null;
+function local(t){
+ var m=t.toLowerCase().trim();
+ if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
+ if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
+ if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
+ if(m==='привет'||m==='ку'||m==='помощь')return 'Привет! Я puzik ai:\n• Погода (погода Брест / Каменец)\n• Курс валют РБ (курс доллара)\n• Уравнения и примеры (3x + 5 = 20)\n• История, факты, анекдоты, таблица умножения';
+ if((m.indexOf('какой')!==-1||m.indexOf('какое')!==-1||m.indexOf('сегодня')!==-1)&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 '+new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ if(m.indexOf('сколько врем')!==-1||m.indexOf('который час')!==-1)return '⏰ '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+ if(m.indexOf('брест')!==-1&&(m.indexOf('основан')!==-1||m.indexOf('истор')!==-1))return '🏰 Брест (Берестье) впервые упомянут в 1019 году. В 1390 году первым в Беларуси получил Магдебургское право.';
+ if(m.indexOf('каменец')!==-1&&(m.indexOf('основан')!==-1||m.indexOf('истор')!==-1||m.indexOf('башн')!==-1))return '🗼 Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
+ if(m.indexOf('анекдот')!==-1||m.indexOf('шутк')!==-1)return '😂 '+['— Папа, почему холодно? — Я программист, я закрыл все окна!','Программист ставит два стакана: с водой — если захочет пить, пустой — если не захочет.'].sort(function(){return 0.5-Math.random()}).shift();
+ if(m.indexOf('факт')!==-1)return '💡 '+['У осьминога три сердца и голубая кровь.','Сутки на Венере длиннее года.','Беловежская пуща — один из старейших заповедников мира.'].sort(function(){return 0.5-Math.random()}).shift();
+ if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r=['📊 Таблица умножения:'];for(var i=2;i<=9;i++){var a=[];for(var j=1;j<=10;j++)a.push(i+'×'+j+'='+(i*j));r.push('На '+i+': '+a.join(', '))}return r.join('\n')}
+ return math(t);
 }
 
-function localReply(t) {
-    var m = t.toLowerCase().trim();
-    if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) {
-        return 'Месси, потому что я его парень';
-    }
-    if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
-    if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
-    if ((m.indexOf('какой') !== -1 || m.indexOf('какое') !== -1 || m.indexOf('сегодня') !== -1) && (m.indexOf('день') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1)) {
-        return '📅 Сегодня: ' + new Date().toLocaleDateString('ru-RU');
-    }
-    if (m.indexOf('сколько врем') !== -1 || m.indexOf('который час') !== -1) {
-        return '⏰ Сейчас: ' + new Date().toLocaleTimeString('ru-RU');
-    }
-    if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
-        var r = ['📊 Таблица умножения:'];
-        for (var i = 2; i <= 9; i++) {
-            var a = [];
-            for (var j = 1; j <= 10; j++) a.push(i + '×' + j + '=' + (i * j));
-            r.push('На ' + i + ': ' + a.join(', '));
-        }
-        return r.join('\n');
-    }
-    return solveMath(t);
+async function web(q){
+ var low=q.toLowerCase();
+ if(low.indexOf('погод')!==-1){
+  try{
+   var city=low.replace(/погода\s*(в|во)?/gi,'').replace(/[?!.]+$/,'').trim()||'Брест';
+   var g=await(await fetch('https://open-meteo.com')).json();
+   if(g.results&&g.results.length){
+    var pl=g.results.shift(),w=await(await fetch('https://open-meteo.com')).json();
+    if(w.current_weather)return '🌤 Погода ('+pl.name+'): '+w.current_weather.temperature+' °C, ветер '+w.current_weather.windspeed+' км/ч';
+   }
+  }catch(e){}
+ }
+ if(low.indexOf('курс')!==-1||low.indexOf('доллар')!==-1||low.indexOf('евро')!==-1){
+  try{
+   var u=await(await fetch('https://nbrb.by')).json(),eu=await(await fetch('https://nbrb.by')).json(),ru=await(await fetch('https://nbrb.by')).json();
+   return '💵 Курс НБ РБ:\n🇺🇸 1 USD = '+u.Cur_OfficialRate+' BYN\n🇪🇺 1 EUR = '+eu.Cur_OfficialRate+' BYN\n🇷🇺 100 RUB = '+ru.Cur_OfficialRate+' BYN';
+  }catch(e){}
+ }
+ try{
+  var cl=low.replace(/^(что такое|кто такой|кто такая|расскажи про|найди|новости|основание|история)\s+/gi,'').replace(/бреста/g,'Брест').replace(/минска/g,'Минск').replace(/[?!.]+$/,'').trim();
+  if(cl.length>1){
+   var wd=await(await fetch('https://wikipedia.org*')).json();
+   var hit=wd.query&&wd.query.search&&wd.query.search.length?wd.query.search.shift():null;
+   if(hit){var sd=await(await fetch('https://wikipedia.org)).json();if(sd.extract)return '📖 '+sd.title+':\n'+sd.extract}
+  }
+ }catch(e){}
+ return 'Не нашлось. Попробуй проще: «погода Брест», «курс доллара», «основание Бреста» или введи пример!';
 }
 
-async function webSearch(q) {
-    var out = [];
-    var low = q.toLowerCase();
-
-    // 1. Если просят новости — подтягиваем свежие новости через Google News RSS -> JSON
-    if (low.indexOf('новост') !== -1) {
-        try {
-            var newsTopic = q.replace(/новости\s*(про|о|об)?/gi, '').trim() || 'Беларусь';
-            var rssUrl = 'https://google.com' + encodeURIComponent(newsTopic) + '&hl=ru&gl=BY&ceid=BY:ru';
-            var nr = await fetch('https://rss2json.com' + encodeURIComponent(rssUrl));
-            if (nr.ok) {
-                var nd = await nr.json();
-                if (nd && nd.items && nd.items.length > 0) {
-                    var newsLines = ['📰 Свежие новости по теме «' + newsTopic + '»:'];
-                    for (var k = 0; k < Math.min(4, nd.items.length); k++) {
-                        newsLines.push('• ' + nd.items.item(k).title);
-                    }
-                    out.push(newsLines.join('\n'));
-                }
-            }
-        } catch (e) {}
-    }
-
-    // 2. Поиск энциклопедической справки (очищаем вопрос от лишних слов)
-    try {
-        var cl = q
-            .replace(/^(что такое|кто такой|кто такая|расскажи про|найди|новости про|новости|основание|история|когда основан)\s+/gi, '')
-            .replace(/[?!.]+$/, '')
-            .trim();
-
-        var wr = await fetch('https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&origin=*');
-        var wd = await wr.json();
-        var hit = (wd && wd.query && wd.query.search && wd.query.search.length > 0) ? wd.query.search.shift() : null;
-        if (hit) {
-            var sr = await fetch('https://wikipedia.org' + encodeURIComponent(hit.title));
-            if (sr.ok) {
-                var sd = await sr.json();
-                if (sd.extract) out.push('📖 ' + sd.title + ':\n' + sd.extract);
-            }
-        }
-    } catch (e) {}
-
-    // 3. Общий веб-поиск по интернету
-    try {
-        var sq = (q.length > 25 && /\d/.test(q)) ? q + ' решение ответ' : q;
-        var r = await fetch('https://allorigins.win' + encodeURIComponent('https://duckduckgo.com' + encodeURIComponent(sq)));
-        if (r.ok) {
-            var j = await r.json();
-            if (j && j.contents) {
-                var doc = new DOMParser().parseFromString(j.contents, 'text/html');
-                var sn = doc.querySelectorAll('.result-snippet');
-                var lk = doc.querySelectorAll('.result-link');
-                for (var i = 0; i < Math.min(2, sn.length); i++) {
-                    var tt = lk.item(i) ? lk.item(i).textContent.trim() : '';
-                    var tx = sn.item(i).textContent.trim();
-                    if (tx) out.push('🔹 ' + tt + '\n' + tx);
-                }
-            }
-        }
-    } catch (e) {}
-
-    return out.length ? out.join('\n\n') : 'Ничего не нашлось. Попробуй написать ключевое слово проще (например: «Брест» или «новости Брест»)!';
-}
-
-async function send() {
-    var inp = document.getElementById('p');
-    var t = inp.value.trim();
-    if (!t) return;
-    add(t, 1);
-    inp.value = '';
-    var l = add('🔍 Ищу и решаю...', 0);
-    try {
-        var loc = localReply(t);
-        if (loc) {
-            l.textContent = loc;
-        } else if (t.toLowerCase() === 'привет') {
-            l.textContent = 'Привет! Я puzik ai. Задай любой вопрос, новость или задачу!';
-        } else {
-            l.textContent = await webSearch(t);
-        }
-    } catch (e) {
-        l.textContent = 'Ошибка поиска.';
-    }
+async function send(){
+ var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
+ add(t,1);inp.value='';var l=add('🔍 Думаю...',0);
+ try{l.textContent=local(t)||await web(t)}catch(e){l.textContent='Ошибка запроса.'}
 }
 </script>
 </body>
