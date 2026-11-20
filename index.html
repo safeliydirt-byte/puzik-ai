@@ -17,72 +17,115 @@ button{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:#f
 </style>
 </head>
 <body>
-<header>🤖 puzik ai v5</header>
+<header>🤖 puzik ai v6</header>
 <div id="chat"></div>
 <div id="inp"><input id="p" placeholder="Спроси что угодно..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Отпр.</button></div>
 <script>
-function add(t,u){
- var c=document.getElementById('chat'),d=document.createElement('div');
- d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
+var NL = String.fromCharCode(10);
+
+function add(t, u) {
+    var c = document.getElementById('chat');
+    var d = document.createElement('div');
+    d.className = 'm ' + (u ? 'u' : 'a');
+    d.textContent = t;
+    c.appendChild(d);
+    c.scrollTop = c.scrollHeight;
+    return d;
 }
 
-function getAnswer(t){
- var m=t.toLowerCase().trim();
- if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
- if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
- if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку'||m==='помощь')return 'Привет! Я puzik ai v5:\n• Погода (погода Брест / Каменец)\n• Курс валют РБ (курс доллара)\n• Примеры (например: 25 * 4 + 10)\n• История, факты, анекдоты, таблица умножения';
- if(m.indexOf('сегодня')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1||m.indexOf('какой день')!==-1)return '📅 Сегодня: '+new Date().toLocaleDateString('ru-RU');
- if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ Сейчас: '+new Date().toLocaleTimeString('ru-RU');
- if(m.indexOf('брест')!==-1&&(m.indexOf('основан')!==-1||m.indexOf('истор')!==-1))return '🏰 Брест (Берестье) впервые упомянут в 1019 году. В 1390 году первым в Беларуси получил Магдебургское право.';
- if(m.indexOf('каменец')!==-1&&(m.indexOf('основан')!==-1||m.indexOf('истор')!==-1||m.indexOf('башн')!==-1))return '🗼 Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
- if(m.indexOf('анекдот')!==-1||m.indexOf('шутк')!==-1)return '😂 — Папа, почему холодно? — Я программист, я закрыл все окна!';
- if(m.indexOf('факт')!==-1)return '💡 У осьминога три сердца, девять мозгов и голубая кровь.';
- if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){
-  var r='📊 Таблица умножения:\n';
-  for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+='\n'}
-  return r;
- }
- var clean=m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
- if(clean.length>0&&'0123456789('.indexOf(clean.charAt(0))!==-1){
-  try{var res=Function('return('+clean+')')();if(typeof res==='number'&&isFinite(res))return '🧮 '+clean+' = '+res}catch(e){}
- }
- return null;
+function getAnswer(t) {
+    var m = t.toLowerCase().trim();
+    if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) {
+        return 'Месси, потому что я его парень';
+    }
+    if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
+    if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
+    if (m === 'привет' || m === 'ку' || m === 'помощь') {
+        return 'Привет! Я puzik ai v6:' + NL + '• Погода (погода Брест / Каменец)' + NL + '• Курс валют РБ (курс доллара)' + NL + '• Примеры (например: 25 * 4 + 10)' + NL + '• История, факты, анекдоты, таблица умножения';
+    }
+    if (m.indexOf('сегодня') !== -1 || m.indexOf('число') !== -1 || m.indexOf('дата') !== -1 || m.indexOf('какой день') !== -1) {
+        return '📅 Сегодня: ' + new Date().toLocaleDateString('ru-RU');
+    }
+    if (m.indexOf('время') !== -1 || m.indexOf('который час') !== -1) {
+        return '⏰ Сейчас: ' + new Date().toLocaleTimeString('ru-RU');
+    }
+    if (m.indexOf('брест') !== -1 && (m.indexOf('основан') !== -1 || m.indexOf('истор') !== -1)) {
+        return '🏰 Брест (Берестье) впервые упомянут в 1019 году. В 1390 году первым в Беларуси получил Магдебургское право.';
+    }
+    if (m.indexOf('каменец') !== -1 && (m.indexOf('основан') !== -1 || m.indexOf('истор') !== -1 || m.indexOf('башн') !== -1)) {
+        return '🗼 Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
+    }
+    if (m.indexOf('анекдот') !== -1 || m.indexOf('шутк') !== -1) {
+        return '😂 — Папа, почему холодно? — Я программист, я закрыл все окна!';
+    }
+    if (m.indexOf('факт') !== -1) {
+        return '💡 У осьминога три сердца, девять мозгов и голубая кровь.';
+    }
+    if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
+        var r = '📊 Таблица умножения:' + NL;
+        for (var i = 2; i <= 9; i++) {
+            for (var j = 1; j <= 10; j++) r += i + '×' + j + '=' + (i * j) + ' ';
+            r += NL;
+        }
+        return r;
+    }
+    var clean = m.split('реши').join('').split('посчитай').join('').split('сколько будет').join('').split('×').join('*').split(':').join('/').split(',').join('.').trim();
+    if (clean.length > 0 && '0123456789('.indexOf(clean.charAt(0)) !== -1) {
+        try {
+            var res = Function('return(' + clean + ')')();
+            if (typeof res === 'number' && isFinite(res)) return '🧮 ' + clean + ' = ' + res;
+        } catch (e) {}
+    }
+    return null;
 }
 
-async function web(q){
- var low=q.toLowerCase();
- if(low.indexOf('погод')!==-1){
-  try{
-   var city=low.split('погода').join('').split('в ').join('').trim()||'Брест';
-   var g=await(await fetch('https://open-meteo.com')).json();
-   if(g.results&&g.results.length){
-    var pl=g.results.shift(),w=await(await fetch('https://open-meteo.com')).json();
-    if(w.current_weather)return '🌤 Погода ('+pl.name+'): '+w.current_weather.temperature+' °C, ветер '+w.current_weather.windspeed+' км/ч';
-   }
-  }catch(e){}
- }
- if(low.indexOf('курс')!==-1||low.indexOf('доллар')!==-1||low.indexOf('евро')!==-1){
-  try{
-   var u=await(await fetch('https://nbrb.by')).json(),eu=await(await fetch('https://nbrb.by')).json(),ru=await(await fetch('https://nbrb.by')).json();
-   return '💵 Курс НБ РБ:\n🇺🇸 1 USD = '+u.Cur_OfficialRate+' BYN\n🇪🇺 1 EUR = '+eu.Cur_OfficialRate+' BYN\n🇷🇺 100 RUB = '+ru.Cur_OfficialRate+' BYN';
-  }catch(e){}
- }
- try{
-  var cl=low.split('что такое').join('').split('кто такой').join('').split('расскажи про').join('').split('бреста').join('Брест').trim();
-  if(cl.length>1){
-   var wd=await(await fetch('https://wikipedia.org*')).json();
-   var hit=wd.query&&wd.query.search&&wd.query.search.length?wd.query.search.shift():null;
-   if(hit){var sd=await(await fetch('https://wikipedia.org)).json();if(sd.extract)return '📖 '+sd.title+':\n'+sd.extract}
-  }
- }catch(e){}
- return 'Не нашлось. Напиши проще: «погода Брест», «курс доллара», «основание Бреста» или пример (например: 15 * 4)!';
+async function web(q) {
+    var low = q.toLowerCase();
+    if (low.indexOf('погод') !== -1) {
+        try {
+            var city = low.split('погода').join('').split('в ').join('').trim() || 'Брест';
+            var g = await (await fetch('https://open-meteo.com' + encodeURIComponent(city) + '&count=1&language=ru&format=json')).json();
+            if (g.results && g.results.length) {
+                var pl = g.results.shift();
+                var w = await (await fetch('https://open-meteo.com' + pl.latitude + '&longitude=' + pl.longitude + '&current_weather=true')).json();
+                if (w.current_weather) return '🌤 Погода (' + pl.name + '): ' + w.current_weather.temperature + ' °C, ветер ' + w.current_weather.windspeed + ' км/ч';
+            }
+        } catch (e) {}
+    }
+    if (low.indexOf('курс') !== -1 || low.indexOf('доллар') !== -1 || low.indexOf('евро') !== -1) {
+        try {
+            var u = await (await fetch('https://nbrb.by')).json();
+            var eu = await (await fetch('https://nbrb.by')).json();
+            var ru = await (await fetch('https://nbrb.by')).json();
+            return '💵 Курс НБ РБ:' + NL + '🇺🇸 1 USD = ' + u.Cur_OfficialRate + ' BYN' + NL + '🇪🇺 1 EUR = ' + eu.Cur_OfficialRate + ' BYN' + NL + '🇷🇺 100 RUB = ' + ru.Cur_OfficialRate + ' BYN';
+        } catch (e) {}
+    }
+    try {
+        var cl = low.split('что такое').join('').split('кто такой').join('').split('расскажи про').join('').split('бреста').join('Брест').trim();
+        if (cl.length > 1) {
+            var wd = await (await fetch('https://wikipedia.org' + encodeURIComponent(cl) + '&format=json&origin=*')).json();
+            var hit = wd.query && wd.query.search && wd.query.search.length ? wd.query.search.shift() : null;
+            if (hit) {
+                var sd = await (await fetch('https://wikipedia.org' + encodeURIComponent(hit.title))).json();
+                if (sd.extract) return '📖 ' + sd.title + ':' + NL + sd.extract;
+            }
+        }
+    } catch (e) {}
+    return 'Не нашлось. Напиши проще: «погода Брест», «курс доллара», «основание Бреста» или пример (например: 15 * 4)!';
 }
 
-async function send(){
- var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
- add(t,1);inp.value='';var l=add('🔍 Думаю...',0);
- try{l.textContent=getAnswer(t)||await web(t)}catch(e){l.textContent='Ошибка'}
+async function send() {
+    var inp = document.getElementById('p');
+    var t = inp.value.trim();
+    if (!t) return;
+    add(t, 1);
+    inp.value = '';
+    var l = add('🔍 Думаю...', 0);
+    try {
+        l.textContent = getAnswer(t) || await web(t);
+    } catch (e) {
+        l.textContent = 'Ошибка';
+    }
 }
 </script>
 </body>
