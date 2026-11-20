@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>puzik ai MAX</title>
+<title>puzik ai PRO</title>
 <style>
 body{font-family:sans-serif;background:#121212;color:#fff;margin:0;display:flex;flex-direction:column;height:100vh}
 header{padding:12px;text-align:center;font-weight:bold;background:#1e1e1e;border-bottom:1px solid #333}
@@ -18,23 +18,20 @@ button.s{padding:0 18px;border-radius:20px;border:none;background:#3390ec;color:
 </style>
 </head>
 <body>
-<header>🤖 puzik ai MAX (Весь интернет)</header>
-<div id="chat"><div class="m a">Привет! Подключена максимальная база: Веб-поиск + Википедия (RU/EN) + Викиданные (100+ млн объектов) + Викисловарь. Спрашивай что угодно!</div></div>
-<div id="inp"><input id="p" placeholder="Спрашивай что угодно из интернета..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">Отпр.</button></div>
+<header>🤖 puzik ai PRO (Веб + Форумы)</header>
+<div id="chat"><div class="m a">Привет! Я сканирую длинные вопросы целиком и ищу ответы по всему интернету, сайтам и форумам. Спрашивай!</div></div>
+<div id="inp"><input id="p" placeholder="Задай длинный вопрос..." onkeydown="if(event.key==='Enter')send()"><button class="s" onclick="send()">Отпр.</button></div>
 <script>
 var NL=String.fromCharCode(10),cache='',off=0;
 function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},6500);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
+function jsonp(u){return new Promise(function(res,rej){var cb='c'+Math.floor(Math.random()*999999),s=document.createElement('script'),tm=setTimeout(function(){delete window[cb];s.remove();rej()},7500);window[cb]=function(d){clearTimeout(tm);delete window[cb];s.remove();res(d)};s.src=u+(u.indexOf('?')===-1?'?':'&')+'callback='+cb;s.onerror=function(){clearTimeout(tm);delete window[cb];s.remove();rej()};document.body.appendChild(s)})}
 
 function talk(t){
  var m=t.toLowerCase().trim();
  if((m.indexOf('месси')!==-1||m.indexOf('меси')!==-1)&&(m.indexOf('роналд')!==-1||m.indexOf('криштиану')!==-1))return 'Месси, потому что я его парень';
  if(m.indexOf('кошк')!==-1||m.indexOf('кот')!==-1)return 'Да';
  if(m.indexOf('пенси')!==-1&&m.indexOf('бабушк')!==-1)return 'Да';
- if(m==='привет'||m==='ку'||m==='здарова'||m==='хай')return 'Привет! Задавай любой вопрос — ищу сразу по всему интернету и всем базам знаний!';
- if(m.indexOf('как дела')!==-1||m.indexOf('как ты')!==-1)return 'Отлично! Вся база знаний интернета подключена и готова к работе.';
- if(m.indexOf('кто ты')!==-1||m.indexOf('тебя зовут')!==-1)return 'Я puzik ai MAX — поисковый и умный помощник со всей базой знаний в Telegram!';
- if(m.indexOf('спасибо')!==-1)return 'Всегда пожалуйста! Обращайся.';
+ if(m==='привет'||m==='ку'||m==='здарова')return 'Привет! Напиши любой длинный вопрос — я просканирую сайты, форумы и базы знаний!';
  if(m.indexOf('сегодня')!==-1&&(m.indexOf('день')!==-1||m.indexOf('число')!==-1||m.indexOf('дата')!==-1))return '📅 Сегодня: '+new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
  if(m.indexOf('время')!==-1||m.indexOf('который час')!==-1)return '⏰ Сейчас: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
  if(m.indexOf('таблиц')!==-1&&m.indexOf('умнож')!==-1){var r='📊 Таблица умножения:'+NL;for(var i=2;i<=9;i++){for(var j=1;j<=10;j++)r+=i+'×'+j+'='+(i*j)+' ';r+=NL}return r}
@@ -43,124 +40,126 @@ function talk(t){
  return null;
 }
 
-function getKeys(q){
- var stop=['что','такое','кто','такой','такая','такие','расскажи','про','подскажи','пожалуйста','когда','где','как','почему','зачем','откуда','взялась','взялся','появился','основали','основан','история','основание','мне','о','об','в','на','из','за','для','ли','или','а','но','и','же','бы','вообще','можешь','скажи','знаешь','слушай','какой','какая','какие','сколько'];
- var wds=q.toLowerCase().split('?').join(' ').split('!').join(' ').split('.').join(' ').split(',').join(' ').split(' '),res=[];
- for(var i=0;i<wds.length;i++){var w=wds[i].trim();if(w.length>2&&stop.indexOf(w)===-1)res.push(w)}
- return res;
+// Находит в длинном тексте абзац, который лучше всего отвечает на весь длинный вопрос
+function extractRelevantPart(fullText, query){
+ var qWords=query.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('').split(' ').filter(function(w){return w.length>3});
+ if(qWords.length<2||fullText.length<1200)return fullText;
+ var paras=fullText.split(NL);
+ var bestIdx=0,bestScore=-1;
+ for(var i=0;i<paras.length;i++){
+  var pLow=paras[i].toLowerCase(),score=0;
+  for(var j=0;j<qWords.length;j++){
+   if(pLow.indexOf(qWords[j].slice(0,-1))!==-1)score++;
+  }
+  if(score>bestScore){bestScore=score;bestIdx=i}
+ }
+ if(bestScore>0&&bestIdx>0){
+  return paras.slice(bestIdx,bestIdx+3).join(NL+NL);
+ }
+ return fullText;
 }
 
-function stem(w){
- if(w.length<=4)return w;
- var e=['ого','ему','ыми','ими','ами','ями','ых','их','ой','ей','ом','ем','ах','ях','у','ю','а','я','ы','и','е','о'];
- for(var i=0;i<e.length;i++)if(w.length-e[i].length>=4&&w.slice(-e[i].length)===e[i])return w.slice(0,-e[i].length);
- return w;
+// 1. Поиск по всем сайтам, форумам и статьям через веб-индекс (Bing/Google/Reddit/Форумы через RSS-JSON и AllOrigins)
+async function searchWebAndForums(fullQuery){
+ var results=[];
+ // Поиск по форумам и обсуждениям (Reddit + веб-выдача)
+ try{
+  var rRes=await fetch('https://reddit.com');
+  if(rRes.ok){
+   var rData=await rRes.json();
+   var posts=rData&&rData.data&&rData.data.children?rData.data.children:[];
+   for(var i=0;i<posts.length;i++){
+    var post=posts.slice(i,i+1).shift().data;
+    if(post&&post.title){
+     var body=post.selftext?post.selftext.substring(0,250)+'...':'';
+     results.push('💬 [Форум Reddit] '+post.title+(body?NL+body:''));
+    }
+   }
+  }
+ }catch(e){}
+
+ // Поиск по новостным и информационным сайтам рунета
+ try{
+  var gUrl='https://google.com';
+  var nRes=await fetch('https://rss2json.com);
+  if(nRes.ok){
+   var nData=await nRes.json();
+   if(nData&&nData.items&&nData.items.length){
+    for(var j=0;j<Math.min(3,nData.items.length);j++){
+     var it=nData.items.slice(j,j+1).shift();
+     results.push('📰 [Сайт/СМИ] '+it.title);
+    }
+   }
+  }
+ }catch(e){}
+
+ return results;
 }
 
-// 1. Поиск по Википедии (RU / EN)
-async function askWiki(lang,q){
+// 2. Поиск по полной фразе в Википедии (без обрезания до первого слова!)
+async function searchFullPhraseWiki(lang,fullQuery){
  var b='https://'+lang+'.wikipedia.org/w/api.php';
- var sd=await jsonp(b+'?action=query&list=search&srlimit=4&srsearch='+encodeURIComponent(q)+'&format=json');
+ // Передаем ВЕСЬ запрос целиком в поисковый движок Википедии
+ var sd=await jsonp(b+'?action=query&list=search&srlimit=3&srwhat=text&srsearch='+encodeURIComponent(fullQuery)+'&format=json');
  if(!sd||!sd.query||!sd.query.search||!sd.query.search.length)return null;
- var lst=sd.query.search,best=lst.shift();
+ var best=sd.query.search.shift();
  var pd=await jsonp(b+'?action=query&prop=extracts|pageimages&pithumbsize=400&explaintext=1&titles='+encodeURIComponent(best.title)+'&format=json');
  for(var k in pd.query.pages){
   var pg=pd.query.pages[k];
-  if(pg&&pg.extract)return{src:'Википедия ('+lang.toUpperCase()+')',title:pg.title,text:pg.extract,img:pg.thumbnail?pg.thumbnail.source:null,rel:lst};
- }
- return null;
-}
-
-// 2. Поиск по всему вебу (DuckDuckGo Instant Answer JSONP)
-async function askDDG(q){
- var d=await jsonp('https://duckduckgo.com');
- if(d&&d.AbstractText)return{src:'Веб-поиск',title:d.Heading||q,text:d.AbstractText,img:d.Image||null,rel:[]};
- if(d&&d.RelatedTopics&&d.RelatedTopics.length){
-  var lines=[];
-  for(var i=0;i<Math.min(4,d.RelatedTopics.length);i++){
-   var item=d.RelatedTopics.slice(i,i+1).shift();
-   if(item&&item.Text)lines.push('• '+item.Text);
-  }
-  if(lines.length)return{src:'Веб-поиск',title:q,text:lines.join(NL+NL),img:null,rel:[]};
- }
- return null;
-}
-
-// 3. Поиск по Викиданным (100+ млн объектов мира)
-async function askWikidata(q){
- var d=await jsonp('https://wikidata.org');
- if(d&&d.search&&d.search.length){
-  var out=[];
-  for(var i=0;i<d.search.length;i++){
-   var it=d.search.slice(i,i+1).shift();
-   if(it.label)out.push('🔹 '+it.label+(it.description?' — '+it.description:''));
-  }
-  if(out.length)return{src:'База Викиданных (100M+)',title:q,text:out.join(NL),img:null,rel:[]};
- }
- return null;
-}
-
-// 4. Поиск по Викисловарю (значения любых слов)
-async function askDict(q){
- var d=await jsonp('https://wiktionary.org');
- if(d&&d.query&&d.query.search&&d.query.search.length){
-  var best=d.query.search.shift();
-  var pd=await jsonp('https://wiktionary.org');
-  for(var k in pd.query.pages){
-   var pg=pd.query.pages[k];
-   if(pg&&pg.extract)return{src:'Викисловарь',title:pg.title,text:pg.extract,img:null,rel:[]};
+  if(pg&&pg.extract){
+   var relevant=extractRelevantPart(pg.extract,fullQuery);
+   return{title:pg.title,text:relevant,full:pg.extract,img:pg.thumbnail?pg.thumbnail.source:null};
   }
  }
  return null;
 }
 
-async function megaSearch(q){
- var kw=getKeys(q),tries=[];
- if(kw.length)tries.push(kw.join(' '));
- if(kw.length>1){
-  var s=kw.slice().sort(function(a,b){return b.length-a.length});
-  tries.push(s.slice(0,2).join(' '));
-  tries.push(stem(s.shift()));
- }else if(kw.length===1){
-  tries.push(stem(kw.shift()));
- }
- tries.push(q);
+async function deepScan(q){
+ var webHits=await searchWebAndForums(q);
+ var wikiHit=null;
+ try{
+  wikiHit=await searchFullPhraseWiki('ru',q)||await searchFullPhraseWiki('en',q);
+ }catch(e){}
 
- for(var i=0;i<tries.length;i++){
-  var term=tries[i];if(!term||term.length<2)continue;
-  try{
-   var r=await askWiki('ru',term)||await askDDG(term)||await askWiki('en',term)||await askWikidata(term)||await askDict(term);
-   if(r){
-    cache=r.text;off=1600;
-    var out='🌐 ['+r.src+'] '+r.title+':'+NL+r.text.substring(0,1600)+(r.text.length>1600?'...':'');
-    if(r.rel&&r.rel.length){
-     var rm=[];for(var j=0;j<Math.min(3,r.rel.length);j++)rm.push(r.rel.slice(j,j+1).shift().title);
-     out+=NL+NL+'🔎 Похожее: '+rm.join(', ');
-    }
-    return{text:out,img:r.img,more:r.text.length>1600};
-   }
-  }catch(e){}
+ var finalParts=[];
+ var imgUrl=null;
+ var hasMore=false;
+
+ if(wikiHit){
+  cache=wikiHit.full;off=1500;
+  imgUrl=wikiHit.img;
+  hasMore=wikiHit.full.length>1500;
+  finalParts.push('📖 [Энциклопедия] '+wikiHit.title+':'+NL+wikiHit.text.substring(0,1500)+(wikiHit.text.length>1500?'...':''));
  }
- return{text:'Ни в одной из 5 глобальных баз интернета не нашлось совпадений по запросу «'+q+'».',img:null,more:false};
+
+ if(webHits.length>0){
+  finalParts.push('🌐 [Сайты и форумы]:'+NL+webHits.join(NL+NL));
+ }
+
+ if(finalParts.length>0){
+  return{text:finalParts.join(NL+NL+'──────────────'+NL+NL),img:imgUrl,more:hasMore};
+ }
+
+ return{text:'По полному запросу «'+q+'» точных совпадений на открытых форумах и в базах не нашлось.',img:null,more:false};
 }
 
 function moreBtn(div){
- var b=document.createElement('button');b.className='more';b.textContent='📄 Читать дальше';
+ var b=document.createElement('button');b.className='more';b.textContent='📄 Показать всю статью';
  b.onclick=function(){b.remove();var nx=cache.substring(off,off+1600);off+=1600;var nd=add(nx+(off<cache.length?'...':''),0);if(off<cache.length)moreBtn(nd)};
  div.appendChild(document.createElement('br'));div.appendChild(b);
 }
 
 async function send(){
  var inp=document.getElementById('p'),t=inp.value.trim();if(!t)return;
- add(t,1);inp.value='';var l=add('🌐 Сканирую весь интернет...',0);
+ add(t,1);inp.value='';var l=add('🌐 Сканирую сайты, форумы и статьи по всему запросу...',0);
  try{
   var loc=talk(t);
   if(loc){l.textContent=loc}else{
-   var r=await megaSearch(t);l.textContent=r.text;
+   var r=await deepScan(t);l.textContent=r.text;
    if(r.img){var im=document.createElement('img');im.src=r.img;im.style.cssText='max-width:100%;border-radius:12px;margin-top:8px;display:block';l.appendChild(im)}
    if(r.more)moreBtn(l);
   }
- }catch(e){l.textContent='Ошибка соединения с базой.'}
+ }catch(e){l.textContent='Ошибка при сканировании сети.'}
 }
 </script>
 </body>
