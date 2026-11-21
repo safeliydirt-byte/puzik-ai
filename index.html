@@ -105,13 +105,18 @@ function draw() {
 }
 
 function cleanQ(q) {
-    var s = ' ' + q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('') + ' ';
-    var w = 'семпробн:Sempron,семпрон:Sempron,амд:AMD,интел:Intel,нвидиа:NVIDIA,бреста:Брест,каменца:Каменец,привет:,расскажи:,подскажи:,что такое:,кто такой:,найди:,про:,о:,об:,и:'.split(',');
-    for (var i = 0; i < w.length; i++) {
-        var p = w.at(i).split(':');
-        s = s.split(' ' + p.at(0) + ' ').join(' ' + p.at(1) + ' ');
+    var s = ' ' + q.toLowerCase().split('?').join(' ').split('!').join(' ').split('.').join(' ').split(',').join(' ') + ' ';
+    var stop = 'привет,расскажи,подскажи,пожалуйста,что,такое,кто,такой,такая,почему,зачем,как,когда,где,сколько,можно,нужно,ли,вообще,найди,про,о,об,и,в,на,из,за,для,семпробн:Sempron,семпрон:Sempron,амд:AMD,интел:Intel,нвидиа:NVIDIA,бреста:Брест,каменца:Каменец'.split(',');
+    for (var i = 0; i < stop.length; i++) {
+        var item = stop.at(i);
+        if (item.indexOf(':') > -1) {
+            var p = item.split(':');
+            s = s.split(' ' + p.at(0) + ' ').join(' ' + p.at(1) + ' ');
+        } else {
+            s = s.split(' ' + item + ' ').join(' ');
+        }
     }
-    return s.trim() || q;
+    return s.replace(/\s+/g, ' ').trim() || q;
 }
 
 function loc(t) {
@@ -122,8 +127,6 @@ function loc(t) {
     if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Чем помочь?';
     if (m.indexOf('как дела') > -1) return 'Отлично! Готов отвечать на твои вопросы.';
     if (m.indexOf('семпро') > -1 || m.indexOf('sempron') > -1) return 'AMD Sempron — бюджетный процессор от AMD. Тянет офис, фильмы и классику 2000-х (GTA SA, CS 1.6, NFS Underground, Warcraft 3).';
-    if (m.indexOf('брест') > -1 && m.indexOf('основан') > -1) return 'Брест (Берестье) впервые упомянут в «Повести временных лет» в 1019 году.';
-    if (m.indexOf('каменец') > -1) return 'Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
     if (m.indexOf('таблиц') > -1 && m.indexOf('умнож') > -1) {
         var r = '';
         for (var i = 2; i < 10; i++) {
@@ -136,6 +139,51 @@ function loc(t) {
         try { return 'Ответ: ' + Function('return(' + m.split(':').join('/').split(',').join('.') + ')')(); } catch (e) {}
     }
     return null;
+}
+
+function fetchWiki(query, bm, fallbackWord) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://wikipedia.org' + encodeURIComponent(query) + '&format=json&origin=*', true);
+    xhr.timeout = 4000;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var d = JSON.parse(xhr.responseText);
+                    var list = (d && d.query && d.query.search) ? d.query.search : [];
+                    if (list.length) {
+                        var title = list.at(0).title;
+                        var xhr2 = new XMLHttpRequest();
+                        xhr2.open('GET', 'https://wikipedia.org' + encodeURIComponent(title), true);
+                        xhr2.timeout = 4000;
+                        xhr2.onreadystatechange = function() {
+                            if (xhr2.readyState === 4 && xhr2.status === 200) {
+                                try {
+                                    var d2 = JSON.parse(xhr2.responseText);
+                                    if (d2 && d2.extract) {
+                                        bm.x = d2.extract;
+                                        save();
+                                        return draw();
+                                    }
+                                } catch (err) {}
+                            }
+                        };
+                        xhr2.send();
+                        return;
+                    }
+                } catch (err) {}
+            }
+            // Если по полной фразе не нашлось — ищем по самому длинному (главному) слову
+            if (fallbackWord && fallbackWord !== query) {
+                fetchWiki(fallbackWord, bm, null);
+                return;
+            }
+            bm.x = 'Интересный вопрос! По теме «' + query + '» точной справки не нашлось, но я готов обсудить любую другую тему.';
+            save();
+            draw();
+        }
+    };
+    xhr.send();
 }
 
 function send(e) {
@@ -161,48 +209,13 @@ function send(e) {
     draw();
 
     var cq = cleanQ(t);
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://wikipedia.org' + encodeURIComponent(cq) + '&format=json&origin=*', true);
-    xhr.timeout = 4000;
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    var d = JSON.parse(xhr.responseText);
-                    var list = (d && d.query && d.query.search) ? d.query.search : [];
-                    if (list.length) {
-                        var title = list.at(0).title;
-                        var xhr2 = new XMLHttpRequest();
-                        xhr2.open('GET', 'https://wikipedia.org' + encodeURIComponent(title), true);
-                        xhr2.timeout = 4000;
-                        xhr2.onreadystatechange = function() {
-                            if (xhr2.readyState === 4) {
-                                if (xhr2.status === 200) {
-                                    try {
-                                        var d2 = JSON.parse(xhr2.responseText);
-                                        if (d2 && d2.extract) {
-                                            bm.x = d2.extract;
-                                            save();
-                                            return draw();
-                                        }
-                                    } catch (err) {}
-                                }
-                                bm.x = 'Нашёл тему «' + title + '», но не удалось загрузить подробный текст.';
-                                save();
-                                draw();
-                            }
-                        };
-                        xhr2.send();
-                        return;
-                    }
-                } catch (err) {}
-            }
-            bm.x = 'По запросу «' + cq + '» точной статьи не нашлось. Попробуй задать вопрос иначе!';
-            save();
-            draw();
-        }
-    };
-    xhr.send();
+    var words = cq.split(' ');
+    var longest = '';
+    for (var i = 0; i < words.length; i++) {
+        if (words.at(i).length > longest.length) longest = words.at(i);
+    }
+
+    fetchWiki(cq, bm, longest);
 }
 
 draw();
