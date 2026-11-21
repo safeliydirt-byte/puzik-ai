@@ -23,8 +23,8 @@ button.s{padding:0 16px;border-radius:22px;border:none;background:linear-gradien
 </head>
 <body>
 <div class="pig">🐷</div>
-<header><div class="brand">🐷 puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Хрю-привет! Я puzik ai 🐷 Нажми на 🎤 чтобы спросить голосом, или напиши текст!</div></div>
+<header><div class="brand">🐷 puzik ai ⚡</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
+<div id="chat"><div class="m a">Хрю-привет! Я puzik ai 🐷 Отвечаю за секунду — жми 🎤 или пиши!</div></div>
 <div id="inp">
     <button class="mic" id="mic" type="button" onclick="voice()">🎤</button>
     <input id="p" type="text" placeholder="Спроси или нажми 🎤..." onkeydown="if(event.keyCode===13)send()">
@@ -97,15 +97,9 @@ function local(t) {
     return null;
 }
 
-function searchAll(q, box) {
+function fastSearch(q, box) {
     var done = false, clean = cleanQ(q);
     function fin(txt) { if (!done) { done = true; box.textContent = txt; } }
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://pollinations.ai' + encodeURIComponent('Ответь по-русски кратко и живо как ИИ puzik ai: ' + q) + '?model=openai-fast', true);
-    xhr.timeout = 3500;
-    xhr.onreadystatechange = function() { if (xhr.readyState === 4 && xhr.status === 200 && xhr.responseText.trim().length > 2) fin(xhr.responseText.trim()); };
-    xhr.send();
 
     var cb1 = 'd' + Math.floor(Math.random()*999999), s1 = document.createElement('script');
     window[cb1] = function(d) { s1.remove(); if (d && d.AbstractText) fin(d.AbstractText); };
@@ -131,7 +125,7 @@ function searchAll(q, box) {
     s2.src = 'https://wikipedia.org' + encodeURIComponent(clean) + '&format=json&callback=' + cb2;
     document.body.appendChild(s2);
 
-    setTimeout(function() { fin('По запросу «' + clean + '» ничего точного не нашлось. Попробуй спросить иначе!'); }, 4000);
+    setTimeout(function() { fin('По запросу «' + clean + '» ничего точного не нашлось. Попробуй спросить иначе!'); }, 2000);
 }
 
 function send() {
@@ -140,7 +134,7 @@ function send() {
     add(t, 1); inp.value = '';
     var loc = local(t);
     if (loc) { add(loc, 0); return; }
-    searchAll(t, add('🐷 Думаю...', 0));
+    fastSearch(t, add('⚡ Ищу...', 0));
 }
 </script>
 </body>
