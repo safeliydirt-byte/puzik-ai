@@ -6,39 +6,90 @@
 <title>puzik ai</title>
 <style>
 *{box-sizing:border-box}
-body{font-family:sans-serif;background:linear-gradient(160deg,#1f1028,#111424);color:#fff;margin:0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.pig{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:200px;opacity:.12;pointer-events:none;z-index:0}
-header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:rgba(28,16,38,.9);border-bottom:1px solid rgba(255,105,180,.25);z-index:2}
-.brand{font-weight:800;font-size:18px;color:#ff85b3}
-.clr{background:rgba(255,105,180,.18);border:1px solid rgba(255,105,180,.3);color:#fbcfe8;padding:6px 12px;border-radius:12px;font-size:12px;cursor:pointer}
-#chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;z-index:1}
-.m{max-width:88%;padding:11px 14px;border-radius:18px;line-height:1.4;font-size:15px;white-space:pre-wrap;word-wrap:break-word}
-.u{align-self:flex-end;background:linear-gradient(135deg,#ec4899,#8b5cf6)}
-.a{align-self:flex-start;background:rgba(30,24,48,.88);border:1px solid rgba(255,105,180,.25)}
-.sb{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:5px}
-.sl{display:block;padding:7px 10px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:10px;color:#ddd6fe;text-decoration:none;font-size:12px}
-#inp{display:flex;padding:10px;gap:8px;background:rgba(22,14,32,.95);border-top:1px solid rgba(255,105,180,.25);z-index:2}
-input{flex:1;padding:12px 14px;border-radius:22px;border:1px solid rgba(255,105,180,.35);background:rgba(255,255,255,.08);color:#fff;font-size:15px;outline:none}
-button.mic{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,105,180,.4);background:rgba(255,105,180,.15);color:#fff;font-size:18px;cursor:pointer}
-button.s{padding:0 16px;border-radius:22px;border:none;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;font-weight:bold;cursor:pointer}
+body{font-family:sans-serif;background:#0b0f19;color:#e2e8f0;margin:0;display:flex;height:100vh;overflow:hidden}
+#sb{width:240px;background:#0f1626;border-right:1px solid #1e293b;display:flex;flex-direction:column;transition:.2s;z-index:20}
+.st{padding:12px;border-bottom:1px solid #1e293b;display:flex;gap:6px}
+.nb{flex:1;padding:9px;background:#2563eb;color:#fff;border:none;border-radius:9px;font-weight:600;cursor:pointer;text-align:left}
+.cb{display:none;background:#1e293b;color:#94a3b8;border:none;border-radius:9px;padding:0 10px;cursor:pointer}
+#cl{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px}
+.ci{padding:9px 10px;border-radius:9px;font-size:13px;color:#94a3b8;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.ci.act,.ci:hover{background:#1e293b;color:#fff}
+.ct{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.dc{background:none;border:none;color:#64748b;cursor:pointer}
+#mn{flex:1;display:flex;flex-direction:column;height:100vh;min-width:0}
+header{padding:11px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1e293b}
+.mb{background:#162035;border:1px solid #1e293b;color:#fff;width:34px;height:34px;border-radius:9px;cursor:pointer}
+.lg{font-weight:700;font-size:17px}
+#ch{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.mr{display:flex;gap:10px;max-width:760px;width:100%;margin:0 auto}
+.mr.u{justify-content:flex-end}
+.av{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#2563eb,#38bdf8);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.m{padding:10px 14px;border-radius:15px;line-height:1.45;font-size:15px;white-space:pre-wrap;word-wrap:break-word;max-width:85%}
+.u .m{background:#1e293b}
+.a .m{padding:2px;max-width:100%}
+.sl{display:block;margin-top:6px;padding:7px 10px;background:#131b2e;border:1px solid #1e293b;border-radius:9px;color:#60a5fa;text-decoration:none;font-size:12px}
+#iw{padding:10px 14px 14px}
+#in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:6px;background:#131b2e;border:1px solid #26334d;border-radius:22px;padding:5px 7px 5px 14px}
+input{flex:1;background:transparent;border:none;color:#fff;font-size:15px;outline:none;padding:7px 0}
+button.mc{background:none;border:none;color:#94a3b8;font-size:17px;cursor:pointer;padding:5px}
+button.s{width:34px;height:34px;border-radius:50%;border:none;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer}
+@media(max-width:700px){#sb{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%)}#sb.op{transform:translateX(0)}.cb{display:block}}
 </style>
 </head>
 <body>
-<div class="pig">🐷</div>
-<header><div class="brand">🐷 puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Хрю-привет! Я puzik ai 🐷 ИИ-браузер по всему интернету. Спрашивай или жми 🎤!</div></div>
-<div id="inp"><button class="mic" id="mic" type="button" onclick="mic()">🎤</button><input id="p" placeholder="Поиск и вопрос..." onkeydown="if(event.keyCode===13)send()"><button class="s" type="button" onclick="send()">Отпр.</button></div>
+<div id="sb"><div class="st"><button class="nb" type="button" onclick="nChat()">+ Новый чат</button><button class="cb" type="button" onclick="tSB()">✕</button></div><div id="cl"></div></div>
+<div id="mn">
+<header><button class="mb" type="button" onclick="tSB()">☰</button><div class="lg">puzik ai</div></header>
+<div id="ch"></div>
+<div id="iw"><div id="in"><input id="p" placeholder="Спросить puzik ai..." onkeydown="if(event.keyCode===13)send()"><button class="mc" id="mc" type="button" onclick="mic()">🎤</button><button class="s" type="button" onclick="send()">↑</button></div></div>
+</div>
 <script>
-var NL=String.fromCharCode(10);
-function add(t,u){var c=document.getElementById('chat'),d=document.createElement('div');d.className='m '+(u?'u':'a');d.textContent=t;c.appendChild(d);c.scrollTop=c.scrollHeight;return d}
-function clr(){document.getElementById('chat').innerHTML='';add('Очищено! Что найдём?',0)}
+var NL=String.fromCharCode(10),cs=new Array(),aid='';
+function load(){
+ try{var r=localStorage.getItem('pz_c');if(r)cs=JSON.parse(r)}catch(e){}
+ if(!cs||!cs.length)nChat();else{aid=cs.slice(0,1).shift().id;rSB();rMsg()}
+}
+function save(){try{localStorage.setItem('pz_c',JSON.stringify(cs))}catch(e){}}
+function tSB(){var s=document.getElementById('sb');s.className=s.className==='op'?'':'op'}
+function nChat(){
+ var id='c'+Date.now();
+ cs.unshift({id:id,t:'Новый чат',m:new Array({r:'a',x:'Привет! Я puzik ai. Задавай любые вопросы или создавай новые чаты в меню слева!',l:new Array()})});
+ aid=id;save();rSB();rMsg();document.getElementById('sb').className='';
+}
+function delC(id,e){
+ if(e)e.stopPropagation();var nx=new Array();
+ for(var i=0;i!==cs.length;i++){var it=cs.slice(i,i+1).shift();if(it.id!==id)nx.push(it)}
+ cs=nx;if(!cs.length)nChat();else{if(aid===id)aid=cs.slice(0,1).shift().id;save();rSB();rMsg()}
+}
+function curC(){for(var i=0;i!==cs.length;i++){var it=cs.slice(i,i+1).shift();if(it.id===aid)return it}return cs.slice(0,1).shift()}
+function rSB(){
+ var l=document.getElementById('cl');l.innerHTML='';
+ for(var i=0;i!==cs.length;i++)(function(c){
+  var d=document.createElement('div');d.className='ci'+(c.id===aid?' act':'');
+  d.onclick=function(){aid=c.id;rSB();rMsg();document.getElementById('sb').className=''};
+  var s=document.createElement('span');s.className='ct';s.textContent=c.t;
+  var b=document.createElement('button');b.className='dc';b.type='button';b.textContent='✕';b.onclick=function(e){delC(c.id,e)};
+  d.appendChild(s);d.appendChild(b);l.appendChild(d);
+ })(cs.slice(i,i+1).shift());
+}
+function rMsg(){
+ var b=document.getElementById('ch');b.innerHTML='';var c=curC();if(!c)return;
+ for(var i=0;i!==c.m.length;i++){var m=c.m.slice(i,i+1).shift();bub(m.x,m.r==='u',m.l)}
+}
+function bub(t,u,lks){
+ var b=document.getElementById('ch'),rw=document.createElement('div');rw.className='mr '+(u?'u':'a');
+ if(!u){var a=document.createElement('div');a.className='av';a.textContent='P';rw.appendChild(a)}
+ var m=document.createElement('div');m.className='m';m.textContent=t;
+ if(lks&&lks.length)for(var i=0;i!==lks.length;i++){var k=lks.slice(i,i+1).shift(),lk=document.createElement('a');lk.className='sl';lk.href=k.u;lk.target='_blank';lk.textContent=k.t;m.appendChild(lk)}
+ rw.appendChild(m);b.appendChild(rw);b.scrollTop=b.scrollHeight;
+}
 function mic(){
- var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){add('Микрофон здесь не поддерживается, пиши текстом!',0);return}
- var r=new SR(),b=document.getElementById('mic');r.lang='ru-RU';b.textContent='🔴';
+ var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){bub('Голосовой ввод здесь недоступен.',0,null);return}
+ var r=new SR(),b=document.getElementById('mc');r.lang='ru-RU';b.textContent='🔴';
  r.onresult=function(e){b.textContent='🎤';document.getElementById('p').value=e.results.shift().shift().transcript;send()};
  r.onerror=r.onend=function(){b.textContent='🎤'};r.start();
 }
-function clean(q){
+function cln(q){
  var s=' '+q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('')+' ';
  var w='семпробн:Sempron,семпрон:Sempron,амд:AMD,интел:Intel,нвидиа:NVIDIA,бреста:Брест,каменца:Каменец,привет:,расскажи:,подскажи:,что такое:,кто такой:,найди:,погугли:,про:,о:,об:,и:'.split(',');
  for(var i=0;i!==w.length;i++){var p=w.slice(i,i+1).shift().split(':');s=s.split(' '+p.shift()+' ').join(' '+p.shift()+' ')}
@@ -60,46 +111,37 @@ function loc(t){
  if(cl.length!==0&&'0123456789('.indexOf(cl.charAt(0))!==-1){try{var v=Function('return('+cl+')')();if(typeof v==='number'&&isFinite(v))return 'Ответ: '+v}catch(e){}}
  return null;
 }
-function web(q,box){
- var cq=clean(q),sum='',lks=new Array(),done=false;
- function out(){
-  if(done||(!sum&&lks.length===0))return;done=true;
-  box.textContent=sum?('Вот что я нашёл в интернете:'+NL+NL+sum):('Материалы по теме «'+cq+'»:');
-  var sb=document.createElement('div');sb.className='sb';
-  var lim=Math.min(3,lks.length);
-  for(var i=0;i!==lim;i++){var it=lks.slice(i,i+1).shift(),a=document.createElement('a');a.className='sl';a.href=it.u;a.target='_blank';a.textContent='🌐 '+it.t;sb.appendChild(a)}
-  var gl=document.createElement('a');gl.className='sl';gl.href='https://google.com'🔎 Открыть в Google';sb.appendChild(gl);
-  box.appendChild(sb);document.getElementById('chat').scrollTop=999999;
+function web(q,mo){
+ var cq=cln(q),sum='',lks=new Array(),dn=false;
+ function fin(){
+  if(dn||(!sum&&!lks.length))return;dn=true;
+  mo.x=sum?('Вот что нашёл puzik ai:'+NL+NL+sum):('Материалы puzik ai по теме «'+cq+'»:');
+  var fl=new Array();
+  for(var i=0;i!==Math.min(2,lks.length);i++){var it=lks.slice(i,i+1).shift();fl.push({t:'🌐 '+it.t,u:it.u})}
+  fl.push({t:'🔎 Открыть полный поиск puzik ai',u:'https://google.com});
+  mo.l=fl;save();rMsg();
  }
  var cw='w'+Math.floor(Math.random()*999999),sw=document.createElement('script');
  window[cw]=function(sd){
   sw.remove();var ls=(sd&&sd.query&&sd.query.search)?sd.query.search:new Array();
   if(ls.length){
-   var tt=ls.shift().title;lks.push({t:tt+' — Википедия',u:'https://wikipedia.org});
+   var tt=ls.shift().title;lks.push({t:tt,u:'https://wikipedia.org});
    var cw2='w'+Math.floor(Math.random()*999999),sw2=document.createElement('script');
-   window[cw2]=function(pd){sw2.remove();if(pd&&pd.query&&pd.query.pages)for(var k in pd.query.pages)if(pd.query.pages[k]&&pd.query.pages[k].extract){sum=pd.query.pages[k].extract;out();return}};
+   window[cw2]=function(pd){sw2.remove();if(pd&&pd.query&&pd.query.pages)for(var k in pd.query.pages)if(pd.query.pages[k]&&pd.query.pages[k].extract){sum=pd.query.pages[k].extract;fin();return}};
    sw2.src='https://wikipedia.org;
   }
  };
  sw.src='https://wikipedia.org;
-
  var cd='d'+Math.floor(Math.random()*999999),sd=document.createElement('script');
- window[cd]=function(d){sd.remove();if(d&&d.AbstractText&&!sum){sum=d.AbstractText;if(d.AbstractURL)lks.push({t:d.Heading||cq,u:d.AbstractURL});out()}};
+ window[cd]=function(d){sd.remove();if(d&&d.AbstractText&&!sum){sum=d.AbstractText;if(d.AbstractURL)lks.push({t:d.Heading||cq,u:d.AbstractURL});fin()}};
  sd.src='https://duckduckgo.com;
-
- var x=new XMLHttpRequest();
- x.open('GET','https://rss2json.com('https://google.com'),true);
- x.timeout=2500;
- x.onreadystatechange=function(){if(x.readyState===4&&x.status===200){try{var nd=JSON.parse(x.responseText);if(nd&&nd.items&&nd.items.length){var m=Math.min(3,nd.items.length);for(var j=0;j!==m;j++){var it=nd.items.slice(j,j+1).shift();lks.push({t:it.title,u:it.link})}if(!sum)out()}}catch(e){}}};
- x.send();
-
- setTimeout(function(){if(!done){lks.push({t:'Искать в Яндексе',u:'https://yandex.by});out()}},2600);
+setTimeout(function(){if(!dn){lks.push({t:'Перейти к результатам поиска',u:'yandex.by});fin()}},2500);
 }
 function send(){
- var i=document.getElementById('p'),t=i.value.trim();if(!t)return;
- add(t,1);i.value='';var l=loc(t);if(l){add(l,0);return}
- web(t,add('🐷 Ищу в сети...',0));
+var i=document.getElementById('p'),t=i.value.trim();if(!t)return;
+var c=curC();if(c.t==='Новый чат'){c.t=t.length>22?t.substring(0,22)+'...':t;rSB()}
+c.m.push({r:'u',x:t,l:new Array()});i.value='';save();rMsg();
+var l=loc(t);if(l){c.m.push({r:'a',x:l,l:new Array()});save();rMsg();return}
+var bm={r:'a',x:'puzik ai думает...',l:new Array()};c.m.push(bm);bub(bm.x,0,null);web(t,bm);
 }
-</script>
-</body>
-</html>
+load();
