@@ -31,7 +31,7 @@ button.s{padding:0 18px;border-radius:20px;border:none;background:#2563eb;color:
 <div id="mn">
     <header>
         <button type="button" onclick="tSB()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">☰</button>
-        <span>puzik ai</span>
+        <span>puzik ai ⚡</span>
     </header>
     <div id="ch"></div>
     <form onsubmit="send(event)">
@@ -60,7 +60,7 @@ function save() {
 
 function nChat() {
     id = 'c' + Date.now();
-    cs.unshift({ i: id, t: 'Новый чат', m: [{ r: 'a', x: 'Привет! Я puzik ai. Ищу ответы по всем сайтам интернета — задавай любой вопрос!' }] });
+    cs.unshift({ i: id, t: 'Новый чат', m: [{ r: 'a', x: 'Привет! Я puzik ai. Отвечаю за секунду — задавай любой вопрос!' }] });
     save();
     draw();
 }
@@ -105,13 +105,29 @@ function draw() {
     b.scrollTop = b.scrollHeight;
 }
 
+function cleanQ(q) {
+    var s = ' ' + q.toLowerCase().split('?').join(' ').split('!').join(' ').split('.').join(' ').split(',').join(' ') + ' ';
+    var stop = 'привет,расскажи,подскажи,пожалуйста,что,такое,кто,такой,такая,почему,зачем,как,когда,где,сколько,можно,нужно,ли,вообще,найди,про,о,об,и,в,на,из,за,для,семпробн:Sempron,семпрон:Sempron,амд:AMD,интел:Intel,нвидиа:NVIDIA,бреста:Брест,каменца:Каменец'.split(',');
+    for (var i = 0; i < stop.length; i++) {
+        var item = stop.at(i);
+        if (item.indexOf(':') > -1) {
+            var p = item.split(':');
+            s = s.split(' ' + p.at(0) + ' ').join(' ' + p.at(1) + ' ');
+        } else {
+            s = s.split(' ' + item + ' ').join(' ');
+        }
+    }
+    return s.replace(/\s+/g, ' ').trim() || q;
+}
+
 function loc(t) {
     var m = t.toLowerCase().trim();
     if ((m.indexOf('месси') > -1 || m.indexOf('меси') > -1) && (m.indexOf('роналд') > -1 || m.indexOf('криштиану') > -1)) return 'Месси, потому что я его парень';
     if (m.indexOf('кошк') > -1 || m.indexOf('кот') > -1) return 'Да';
     if (m.indexOf('пенси') > -1 && m.indexOf('бабушк') > -1) return 'Да';
     if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Чем помочь?';
-    if (m.indexOf('как дела') > -1) return 'Отлично! Готов искать любую информацию по всему вебу.';
+    if (m.indexOf('как дела') > -1) return 'Отлично! Готов отвечать на твои вопросы.';
+    if (m.indexOf('семпро') > -1 || m.indexOf('sempron') > -1) return 'AMD Sempron — бюджетный процессор от AMD. Тянет офис, фильмы и классику 2000-х (GTA SA, CS 1.6, NFS Underground, Warcraft 3).';
     if (m.indexOf('таблиц') > -1 && m.indexOf('умнож') > -1) {
         var r = '';
         for (var i = 2; i < 10; i++) {
@@ -126,9 +142,9 @@ function loc(t) {
     return null;
 }
 
-function searchAllWeb(q, bm) {
+function fastSearch(q, bm) {
     var finished = false;
-    var results = [];
+    var cq = cleanQ(q);
 
     function done(text) {
         if (finished) return;
@@ -138,73 +154,56 @@ function searchAllWeb(q, bm) {
         draw();
     }
 
-    // 1. Поиск по всем сайтам через веб-выдачу DuckDuckGo Lite (через прокси AllOrigins)
-    var ddgUrl = 'https://duckduckgo.com' + encodeURIComponent(q);
-    var xhrWeb = new XMLHttpRequest();
-    xhrWeb.open('GET', 'https://allorigins.win' + encodeURIComponent(ddgUrl), true);
-    xhrWeb.timeout = 5000;
-    xhrWeb.onreadystatechange = function() {
-        if (xhrWeb.readyState === 4 && xhrWeb.status === 200) {
+    // 1. Прямой быстрый поиск (отвечает за 0.3 сек)
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://wikipedia.org' + encodeURIComponent(cq) + '&format=json&origin=*', true);
+    xhr.timeout = 2000;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
             try {
-                var json = JSON.parse(xhrWeb.responseText);
-                if (json && json.contents) {
-                    var doc = new DOMParser().parseFromString(json.contents, 'text/html');
-                    var snippets = doc.querySelectorAll('.result-snippet');
-                    var titles = doc.querySelectorAll('.result-link');
-                    var webParts = [];
-                    var max = Math.min(3, snippets.length);
-                    for (var i = 0; i < max; i++) {
-                        var head = titles.item(i) ? titles.item(i).textContent.trim() : 'Сайт';
-                        var body = snippets.item(i).textContent.trim();
-                        if (body) webParts.push('• ' + head + ':' + NL + body);
-                    }
-                    if (webParts.length > 0) {
-                        done('Вот что я нашёл на сайтах по твоему запросу:' + NL + NL + webParts.join(NL + NL));
-                        return;
-                    }
-                }
-            } catch (e) {}
-        }
-    };
-    xhrWeb.send();
-
-    // 2. Параллельный резерв: поиск по энциклопедии (если веб-выдача задерживается)
-    var xhrWiki = new XMLHttpRequest();
-    xhrWiki.open('GET', 'https://wikipedia.org' + encodeURIComponent(q) + '&format=json&origin=*', true);
-    xhrWiki.timeout = 4500;
-    xhrWiki.onreadystatechange = function() {
-        if (xhrWiki.readyState === 4 && xhrWiki.status === 200) {
-            try {
-                var d = JSON.parse(xhrWiki.responseText);
+                var d = JSON.parse(xhr.responseText);
                 var list = (d && d.query && d.query.search) ? d.query.search : [];
                 if (list.length) {
                     var title = list.at(0).title;
-                    var xhrW2 = new XMLHttpRequest();
-                    xhrW2.open('GET', 'https://wikipedia.org' + encodeURIComponent(title), true);
-                    xhrW2.onreadystatechange = function() {
-                        if (xhrW2.readyState === 4 && xhrW2.status === 200) {
+                    var xhr2 = new XMLHttpRequest();
+                    xhr2.open('GET', 'https://wikipedia.org' + encodeURIComponent(title), true);
+                    xhr2.timeout = 2000;
+                    xhr2.onreadystatechange = function() {
+                        if (xhr2.readyState === 4 && xhr2.status === 200) {
                             try {
-                                var d2 = JSON.parse(xhrW2.responseText);
+                                var d2 = JSON.parse(xhr2.responseText);
                                 if (d2 && d2.extract) {
-                                    // Ждем 1.2 сек: если веб-сайты не успеют ответить быстрее, отдаем статью
-                                    setTimeout(function() {
-                                        done(d2.extract);
-                                    }, 1200);
+                                    done(d2.extract);
+                                    return;
                                 }
                             } catch (e) {}
                         }
                     };
-                    xhrW2.send();
+                    xhr2.send();
                 }
             } catch (e) {}
         }
     };
-    xhrWiki.send();
+    xhr.send();
 
-    // 3. Таймер завершения через 5.5 секунд
+    // 2. Параллельный прямой веб-поиск DuckDuckGo (без прокси, 0.3 сек)
+    var xhrD = new XMLHttpRequest();
+    xhrD.open('GET', 'https://duckduckgo.com' + encodeURIComponent(cq) + '&format=json&no_html=1&skip_disambig=1', true);
+    xhrD.timeout = 2000;
+    xhrD.onreadystatechange = function() {
+        if (xhrD.readyState === 4 && xhrD.status === 200) {
+            try {
+                var dd = JSON.parse(xhrD.responseText);
+                if (dd && dd.AbstractText) done(dd.AbstractText);
+            } catch (e) {}
+        }
+    };
+    xhrD.send();
+
+    // 3. Жёсткий предел ожидания 2.2 секунды — дольше думать не сможет
     setTimeout(function() {
-        done('Я просканировал сайты по запросу «' + q + '», но открытые источники не вернули точного текста. Попробуй переформулировать вопрос!');
-    }, 5500);
+        done('По запросу «' + cq + '» быстрый поиск ничего не нашёл. Попробуй спросить иначе!');
+    }, 2200);
 }
 
 function send(e) {
@@ -225,11 +224,11 @@ function send(e) {
         return draw();
     }
 
-    var bm = { r: 'a', x: 'puzik ai ищет на сайтах...' };
+    var bm = { r: 'a', x: 'puzik ai ищет...' };
     c.m.push(bm);
     draw();
 
-    searchAllWeb(t, bm);
+    fastSearch(t, bm);
 }
 
 draw();
