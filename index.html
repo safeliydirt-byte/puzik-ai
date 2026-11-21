@@ -11,65 +11,170 @@ body{font-family:sans-serif;background:#0b0f19;color:#e2e8f0;margin:0;display:fl
 .nb{padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer}
 .ci{padding:8px;border-radius:8px;font-size:13px;color:#94a3b8;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ci.act{background:#1e293b;color:#fff}
-#mn{flex:1;display:flex;flex-direction:column}
+#mn{flex:1;display:flex;flex-direction:column;min-width:0}
 header{padding:12px 16px;border-bottom:1px solid #1e293b;font-weight:bold;display:flex;gap:10px;align-items:center}
 #ch{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:85%;padding:10px 14px;border-radius:14px;line-height:1.4;white-space:pre-wrap}
+.m{max-width:85%;padding:10px 14px;border-radius:14px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
 .u{align-self:flex-end;background:#1e293b}
 .a{align-self:flex-start;background:#131b2e;border:1px solid #1e293b}
-#iw{padding:10px;display:flex;gap:8px;border-top:1px solid #1e293b}
-input{flex:1;padding:11px 14px;border-radius:20px;border:1px solid #26334d;background:#131b2e;color:#fff;outline:none}
-button.s{padding:0 16px;border-radius:20px;border:none;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer}
+form{padding:10px;display:flex;gap:8px;border-top:1px solid #1e293b;margin:0}
+input{flex:1;padding:11px 14px;border-radius:20px;border:1px solid #26334d;background:#131b2e;color:#fff;outline:none;font-size:15px}
+button.s{padding:0 18px;border-radius:20px;border:none;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;font-size:16px}
 @media(max-width:600px){#sb{display:none}#sb.op{display:flex;position:fixed;top:0;bottom:0;left:0;z-index:9}}
 </style>
 </head>
 <body>
-<div id="sb"><button class="nb" onclick="nChat()">+ Новый чат</button><div id="cl"></div></div>
+<div id="sb">
+    <button class="nb" type="button" onclick="nChat()">+ Новый чат</button>
+    <div id="cl"></div>
+</div>
 <div id="mn">
-<header><button onclick="tSB()" style="background:none;border:none;color:#fff;font-size:18px">☰</button>puzik ai</header>
-<div id="ch"></div>
-<div id="iw"><input id="p" placeholder="Спросить puzik ai..." onkeydown="if(event.keyCode===13)send()"><button class="s" onclick="send()">↑</button></div>
+    <header>
+        <button type="button" onclick="tSB()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">☰</button>
+        <span>puzik ai</span>
+    </header>
+    <div id="ch"></div>
+    <form onsubmit="send(event)">
+        <input id="p" type="text" placeholder="Спросить puzik ai..." autocomplete="off">
+        <button class="s" type="submit">↑</button>
+    </form>
 </div>
 <script>
-var cs=JSON.parse(localStorage.getItem('pz')||'[]'),id='';
-function tSB(){var s=document.getElementById('sb');s.className=s.className?'':'op'}
-function nChat(){id='c'+Date.now();cs.unshift({i:id,t:'Новый чат',m:[{r:'a',x:'Привет! Я puzik ai.'}]});save();draw()}
-function save(){localStorage.setItem('pz',JSON.stringify(cs))}
-function cur(){return cs.find(function(c){return c.i===id})||cs[0]}
-function draw(){
- if(!cs.length)return nChat();if(!id)id=cs[0].i;
- var l=document.getElementById('cl');l.innerHTML='';
- cs.forEach(function(c){var d=document.createElement('div');d.className='ci'+(c.i===id?' act':'');d.textContent=c.t;d.onclick=function(){id=c.i;draw();document.getElementById('sb').className=''};l.appendChild(d)});
- var b=document.getElementById('ch');b.innerHTML='';
- cur().m.forEach(function(m){var d=document.createElement('div');d.className='m '+m.r;d.textContent=m.x;b.appendChild(d)});
- b.scrollTop=b.scrollHeight;
+var cs = [];
+var id = '';
+
+try {
+    var saved = localStorage.getItem('pz');
+    if (saved) cs = JSON.parse(saved);
+} catch (e) {}
+
+function tSB() {
+    var s = document.getElementById('sb');
+    s.className = s.className ? '' : 'op';
 }
-function loc(t){
- var m=t.toLowerCase().trim();
- if((m.indexOf('месси')>-1||m.indexOf('меси')>-1)&&(m.indexOf('роналд')>-1||m.indexOf('криштиану')>-1))return 'Месси, потому что я его парень';
- if(m.indexOf('кошк')>-1||m.indexOf('кот')>-1)return 'Да';
- if(m.indexOf('пенси')>-1&&m.indexOf('бабушк')>-1)return 'Да';
- if(m==='привет'||m==='ку')return 'Привет! Чем помочь?';
- if(m.indexOf('таблиц')>-1&&m.indexOf('умнож')>-1){var r='';for(var i=2;i<10;i++){for(var j=1;j<11;j++)r+=i+'*'+j+'='+(i*j)+' ';r+='\n'}return r}
- if('0123456789('.indexOf(m.charAt(0))>-1){try{return 'Ответ: '+Function('return('+m.split(':').join('/').split(',').join('.')+')')()}catch(e){}}
- return null;
+
+function save() {
+    try { localStorage.setItem('pz', JSON.stringify(cs)); } catch (e) {}
 }
-function send(){
- var p=document.getElementById('p'),t=p.value.trim();if(!t)return;
- var c=cur();if(c.t==='Новый чат')c.t=t.slice(0,20);
- c.m.push({r:'u',x:t});p.value='';
- var l=loc(t);if(l){c.m.push({r:'a',x:l});save();return draw()}
- var bm={r:'a',x:'puzik ai ищет...'};c.m.push(bm);draw();
- var cb='w'+Date.now(),s=document.createElement('script');
- window[cb]=function(d){
-  s.remove();var h=d&&d.query&&d.query.search&&d.query.search[0];
-  if(!h){bm.x='По запросу «'+t+'» ничего не нашлось.';save();return draw()}
-  var cb2='w2'+Date.now(),s2=document.createElement('script');
-  window[cb2]=function(p2){s2.remove();var pg=p2.query.pages;for(var k in pg)if(pg[k].extract)bm.x=pg[k].extract;save();draw()};
-  s2.src='https://wikipedia.org;
- };
- s.src='https://wikipedia.org;
+
+function nChat() {
+    id = 'c' + Date.now();
+    cs.unshift({ i: id, t: 'Новый чат', m: [{ r: 'a', x: 'Привет! Я puzik ai.' }] });
+    save();
+    draw();
 }
+
+function cur() {
+    for (var k = 0; k < cs.length; k++) {
+        if (cs.at(k).i === id) return cs.at(k);
+    }
+    return cs.at(0);
+}
+
+function draw() {
+    if (!cs || !cs.length) return nChat();
+    if (!id) id = cs.at(0).i;
+
+    var l = document.getElementById('cl');
+    l.innerHTML = '';
+    for (var k = 0; k < cs.length; k++) {
+        (function(c) {
+            var d = document.createElement('div');
+            d.className = 'ci' + (c.i === id ? ' act' : '');
+            d.textContent = c.t;
+            d.onclick = function() {
+                id = c.i;
+                draw();
+                document.getElementById('sb').className = '';
+            };
+            l.appendChild(d);
+        })(cs.at(k));
+    }
+
+    var b = document.getElementById('ch');
+    b.innerHTML = '';
+    var activeChat = cur();
+    for (var j = 0; j < activeChat.m.length; j++) {
+        var msg = activeChat.m.at(j);
+        var div = document.createElement('div');
+        div.className = 'm ' + msg.r;
+        div.textContent = msg.x;
+        b.appendChild(div);
+    }
+    b.scrollTop = b.scrollHeight;
+}
+
+function loc(t) {
+    var m = t.toLowerCase().trim();
+    if ((m.indexOf('месси') > -1 || m.indexOf('меси') > -1) && (m.indexOf('роналд') > -1 || m.indexOf('криштиану') > -1)) return 'Месси, потому что я его парень';
+    if (m.indexOf('кошк') > -1 || m.indexOf('кот') > -1) return 'Да';
+    if (m.indexOf('пенси') > -1 && m.indexOf('бабушк') > -1) return 'Да';
+    if (m === 'привет' || m === 'ку') return 'Привет! Чем помочь?';
+    if (m.indexOf('таблиц') > -1 && m.indexOf('умнож') > -1) {
+        var r = '';
+        for (var i = 2; i < 10; i++) {
+            for (var j = 1; j < 11; j++) r += i + '*' + j + '=' + (i * j) + ' ';
+            r += String.fromCharCode(10);
+        }
+        return r;
+    }
+    if ('0123456789('.indexOf(m.charAt(0)) > -1) {
+        try { return 'Ответ: ' + Function('return(' + m.split(':').join('/').split(',').join('.') + ')')(); } catch (e) {}
+    }
+    return null;
+}
+
+function send(e) {
+    if (e) e.preventDefault();
+    var p = document.getElementById('p');
+    var t = p.value.trim();
+    if (!t) return;
+
+    var c = cur();
+    if (c.t === 'Новый чат') c.t = t.slice(0, 20);
+    c.m.push({ r: 'u', x: t });
+    p.value = '';
+
+    var l = loc(t);
+    if (l) {
+        c.m.push({ r: 'a', x: l });
+        save();
+        return draw();
+    }
+
+    var bm = { r: 'a', x: 'puzik ai ищет...' };
+    c.m.push(bm);
+    draw();
+
+    var cb = 'w' + Date.now();
+    var s = document.createElement('script');
+    window[cb] = function(d) {
+        s.remove();
+        var list = (d && d.query && d.query.search) ? d.query.search : [];
+        if (!list.length) {
+            bm.x = 'По запросу «' + t + '» ничего не нашлось.';
+            save();
+            return draw();
+        }
+        var h = list.at(0);
+        var cb2 = 'w2' + Date.now();
+        var s2 = document.createElement('script');
+        window[cb2] = function(p2) {
+            s2.remove();
+            var pg = p2.query.pages;
+            for (var k in pg) {
+                if (pg[k].extract) bm.x = pg[k].extract;
+            }
+            save();
+            draw();
+        };
+        s2.src = 'https://wikipedia.org' + encodeURIComponent(h.title) + '&format=json&callback=' + cb2;
+        document.body.appendChild(s2);
+    };
+    s.src = 'https://wikipedia.org' + encodeURIComponent(t) + '&format=json&callback=' + cb;
+    document.body.appendChild(s);
+}
+
 draw();
 </script>
 </body>
