@@ -31,7 +31,7 @@ button.s{padding:0 18px;border-radius:20px;border:none;background:#2563eb;color:
 <div id="mn">
     <header>
         <button type="button" onclick="tSB()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">☰</button>
-        <span>puzik ai 12</span>
+        <span>puzik ai 14</span>
     </header>
     <div id="ch"></div>
     <form onsubmit="send(event)">
@@ -45,7 +45,7 @@ var cs = new Array();
 var id = '';
 
 try {
-    var saved = localStorage.getItem('pz12');
+    var saved = localStorage.getItem('pz14');
     if (saved) cs = JSON.parse(saved);
 } catch (e) {}
 
@@ -59,12 +59,12 @@ function tSB() {
 }
 
 function save() {
-    try { localStorage.setItem('pz12', JSON.stringify(cs)); } catch (e) {}
+    try { localStorage.setItem('pz14', JSON.stringify(cs)); } catch (e) {}
 }
 
 function nChat() {
     id = 'c' + Date.now();
-    cs.unshift({ i: id, t: 'Новый чат', m: new Array({ r: 'a', x: 'Привет! Я puzik ai. Спрашивай о чём угодно!' }) });
+    cs.unshift({ i: id, t: 'Новый чат', m: new Array({ r: 'a', x: 'Привет! Я puzik ai. Сам ищу ответы в интернете и скидываю тебе!' }) });
     save();
     draw();
 }
@@ -132,7 +132,6 @@ function loc(t) {
     if (m.indexOf('пенси') > -1 && m.indexOf('бабушк') > -1) return 'Да';
     if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Чем помочь?';
     if (m.indexOf('как дела') > -1) return 'Отлично! Готов отвечать на твои вопросы.';
-    if (m.indexOf('семпро') > -1 || m.indexOf('sempron') > -1) return 'AMD Sempron — бюджетный процессор от AMD. Тянет офис, фильмы и классику 2000-х (GTA SA, CS 1.6, NFS Underground, Warcraft 3).';
     if (m.indexOf('таблиц') > -1 && m.indexOf('умнож') > -1) {
         var r = '';
         for (var i = 2; i !== 10; i++) {
@@ -147,28 +146,49 @@ function loc(t) {
     return null;
 }
 
-function searchStep(query, backupWord, doneFn) {
-    var cb = 'w_' + Math.floor(Math.random() * 999999);
-    var s = document.createElement('script');
-    window[cb] = function(d) {
-        s.remove();
-        if (d && d.query && d.query.pages) {
-            for (var k in d.query.pages) {
-                if (d.query.pages[k].extract) {
-                    doneFn(d.query.pages[k].extract);
-                    return;
-                }
+function searchXHR(query, backupWord, doneFn) {
+    // 1. Тот самый рабочий канал через XMLHttpRequest + origin=*
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://wikipedia.org' + encodeURIComponent(query) + '&gsrlimit=1&prop=extracts&exintro=1&explaintext=1&format=json&origin=*', true);
+    xhr.timeout = 3500;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var d = JSON.parse(xhr.responseText);
+                    if (d && d.query && d.query.pages) {
+                        for (var k in d.query.pages) {
+                            if (d.query.pages[k].extract) {
+                                doneFn(d.query.pages[k].extract);
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {}
             }
+            // Если по целой фразе ответа нет — ищем по главному слову из вопроса
+            if (backupWord && backupWord !== query) {
+                searchXHR(backupWord, null, doneFn);
+                return;
+            }
+            doneFn('По запросу «' + query + '» точной статьи в сети не нашлось.');
         }
-        if (backupWord && backupWord !== query) {
-            searchStep(backupWord, null, doneFn);
-            return;
-        }
-        doneFn('По запросу «' + query + '» точной статьи не нашлось. Попробуй другое слово!');
     };
-    s.onerror = function() { doneFn('Нет связи с базой.'); };
-    s.src = 'https://wikipedia.org' + encodeURIComponent(query) + '&gsrlimit=1&prop=extracts&exintro=1&explaintext=1&format=json&callback=' + cb;
-    document.body.appendChild(s);
+    xhr.send();
+
+    // 2. Параллельный веб-поиск DuckDuckGo через XMLHttpRequest
+    var xhrD = new XMLHttpRequest();
+    xhrD.open('GET', 'https://duckduckgo.com' + encodeURIComponent(query) + '&format=json&no_html=1&skip_disambig=1', true);
+    xhrD.timeout = 3500;
+    xhrD.onreadystatechange = function() {
+        if (xhrD.readyState === 4 && xhrD.status === 200) {
+            try {
+                var dd = JSON.parse(xhrD.responseText);
+                if (dd && dd.AbstractText) doneFn(dd.AbstractText);
+            } catch (e) {}
+        }
+    };
+    xhrD.send();
 }
 
 function send(e) {
@@ -189,7 +209,7 @@ function send(e) {
         return draw();
     }
 
-    var bm = { r: 'a', x: '...' };
+    var bm = { r: 'a', x: 'Ищу в сети...' };
     c.m.push(bm);
     draw();
 
@@ -210,11 +230,11 @@ function send(e) {
         draw();
     }
 
-    searchStep(cq, longest, finish);
+    searchXHR(cq, longest, finish);
 
     setTimeout(function() {
-        finish('По запросу «' + cq + '» ответ не успел загрузиться. Попробуй ещё раз!');
-    }, 3500);
+        finish('По запросу «' + cq + '» ответ не успел загрузиться.');
+    }, 4500);
 }
 
 draw();
