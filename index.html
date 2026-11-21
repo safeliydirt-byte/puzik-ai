@@ -31,7 +31,7 @@ button.s{padding:0 18px;border-radius:20px;border:none;background:#2563eb;color:
 <div id="mn">
     <header>
         <button type="button" onclick="tSB()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">☰</button>
-        <span>puzik ai ⚡</span>
+        <span>puzik ai</span>
     </header>
     <div id="ch"></div>
     <form onsubmit="send(event)">
@@ -59,7 +59,7 @@ function save() {
 
 function nChat() {
     id = 'c' + Date.now();
-    cs.unshift({ i: id, t: 'Новый чат', m: [{ r: 'a', x: 'Привет! Я puzik ai. Отвечаю за секунду — спрашивай!' }] });
+    cs.unshift({ i: id, t: 'Новый чат', m: [{ r: 'a', x: 'Привет! Я puzik ai. Задавай любые вопросы!' }] });
     save();
     draw();
 }
@@ -119,8 +119,11 @@ function loc(t) {
     if ((m.indexOf('месси') > -1 || m.indexOf('меси') > -1) && (m.indexOf('роналд') > -1 || m.indexOf('криштиану') > -1)) return 'Месси, потому что я его парень';
     if (m.indexOf('кошк') > -1 || m.indexOf('кот') > -1) return 'Да';
     if (m.indexOf('пенси') > -1 && m.indexOf('бабушк') > -1) return 'Да';
-    if (m === 'привет' || m === 'ку') return 'Привет! Чем помочь?';
+    if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Чем помочь?';
+    if (m.indexOf('как дела') > -1) return 'Отлично! Готов отвечать на твои вопросы.';
     if (m.indexOf('семпро') > -1 || m.indexOf('sempron') > -1) return 'AMD Sempron — бюджетный процессор от AMD. Тянет офис, фильмы и классику 2000-х (GTA SA, CS 1.6, NFS Underground, Warcraft 3).';
+    if (m.indexOf('брест') > -1 && m.indexOf('основан') > -1) return 'Брест (Берестье) впервые упомянут в «Повести временных лет» в 1019 году.';
+    if (m.indexOf('каменец') > -1) return 'Каменец основан в 1276 году князем Владимиром Васильковичем. Главный символ — Каменецкая башня (Белая вежа).';
     if (m.indexOf('таблиц') > -1 && m.indexOf('умнож') > -1) {
         var r = '';
         for (var i = 2; i < 10; i++) {
@@ -157,51 +160,49 @@ function send(e) {
     c.m.push(bm);
     draw();
 
-    var done = false;
     var cq = cleanQ(t);
-    function finish(ans) {
-        if (done) return;
-        done = true;
-        bm.x = ans;
-        save();
-        draw();
-    }
-
-    // Жёсткий таймаут 3 секунды, чтобы никогда не зависало
-    setTimeout(function() {
-        finish('По запросу «' + cq + '» быстрый поиск ничего не нашёл. Попробуй переформулировать!');
-    }, 3000);
-
-    var cb = 'w' + Date.now();
-    var s = document.createElement('script');
-    s.onerror = function() { finish('Ошибка сети при поиске.'); };
-    window[cb] = function(d) {
-        s.remove();
-        var list = (d && d.query && d.query.search) ? d.query.search : [];
-        if (!list.length) {
-            finish('По запросу «' + cq + '» ничего не нашлось.');
-            return;
-        }
-        var h = list.at(0);
-        var cb2 = 'w2' + Date.now();
-        var s2 = document.createElement('script');
-        s2.onerror = function() { finish('Не удалось загрузить текст ответа.'); };
-        window[cb2] = function(p2) {
-            s2.remove();
-            var pg = p2.query.pages;
-            for (var k in pg) {
-                if (pg[k].extract) {
-                    finish(pg[k].extract);
-                    return;
-                }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://wikipedia.org' + encodeURIComponent(cq) + '&format=json&origin=*', true);
+    xhr.timeout = 4000;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var d = JSON.parse(xhr.responseText);
+                    var list = (d && d.query && d.query.search) ? d.query.search : [];
+                    if (list.length) {
+                        var title = list.at(0).title;
+                        var xhr2 = new XMLHttpRequest();
+                        xhr2.open('GET', 'https://wikipedia.org' + encodeURIComponent(title), true);
+                        xhr2.timeout = 4000;
+                        xhr2.onreadystatechange = function() {
+                            if (xhr2.readyState === 4) {
+                                if (xhr2.status === 200) {
+                                    try {
+                                        var d2 = JSON.parse(xhr2.responseText);
+                                        if (d2 && d2.extract) {
+                                            bm.x = d2.extract;
+                                            save();
+                                            return draw();
+                                        }
+                                    } catch (err) {}
+                                }
+                                bm.x = 'Нашёл тему «' + title + '», но не удалось загрузить подробный текст.';
+                                save();
+                                draw();
+                            }
+                        };
+                        xhr2.send();
+                        return;
+                    }
+                } catch (err) {}
             }
-            finish('Точного описания по теме «' + cq + '» нет.');
-        };
-        s2.src = 'https://wikipedia.org' + encodeURIComponent(h.title) + '&format=json&callback=' + cb2;
-        document.body.appendChild(s2);
+            bm.x = 'По запросу «' + cq + '» точной статьи не нашлось. Попробуй задать вопрос иначе!';
+            save();
+            draw();
+        }
     };
-    s.src = 'https://wikipedia.org' + encodeURIComponent(cq) + '&format=json&callback=' + cb;
-    document.body.appendChild(s);
+    xhr.send();
 }
 
 draw();
