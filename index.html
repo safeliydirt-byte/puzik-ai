@@ -31,7 +31,7 @@ button.s{padding:0 18px;border-radius:20px;border:none;background:#2563eb;color:
 <div id="mn">
     <header>
         <button type="button" onclick="tSB()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">☰</button>
-        <span>puzik ai 11</span>
+        <span>puzik ai 12</span>
     </header>
     <div id="ch"></div>
     <form onsubmit="send(event)">
@@ -45,7 +45,7 @@ var cs = new Array();
 var id = '';
 
 try {
-    var saved = localStorage.getItem('pz11');
+    var saved = localStorage.getItem('pz12');
     if (saved) cs = JSON.parse(saved);
 } catch (e) {}
 
@@ -59,12 +59,12 @@ function tSB() {
 }
 
 function save() {
-    try { localStorage.setItem('pz11', JSON.stringify(cs)); } catch (e) {}
+    try { localStorage.setItem('pz12', JSON.stringify(cs)); } catch (e) {}
 }
 
 function nChat() {
     id = 'c' + Date.now();
-    cs.unshift({ i: id, t: 'Новый чат', m: new Array({ r: 'a', x: 'Привет! Я puzik ai. Отвечаю мгновенно!' }) });
+    cs.unshift({ i: id, t: 'Новый чат', m: new Array({ r: 'a', x: 'Привет! Я puzik ai. Спрашивай о чём угодно!' }) });
     save();
     draw();
 }
@@ -147,18 +147,7 @@ function loc(t) {
     return null;
 }
 
-function instantSearch(q, bm) {
-    var finished = false;
-    var cq = cleanQ(q);
-
-    function done(text) {
-        if (finished) return;
-        finished = true;
-        bm.x = text;
-        save();
-        draw();
-    }
-
+function searchStep(query, backupWord, doneFn) {
     var cb = 'w_' + Math.floor(Math.random() * 999999);
     var s = document.createElement('script');
     window[cb] = function(d) {
@@ -166,20 +155,20 @@ function instantSearch(q, bm) {
         if (d && d.query && d.query.pages) {
             for (var k in d.query.pages) {
                 if (d.query.pages[k].extract) {
-                    done(d.query.pages[k].extract);
+                    doneFn(d.query.pages[k].extract);
                     return;
                 }
             }
         }
-        done('По запросу «' + cq + '» точной статьи нет. Попробуй другое слово!');
+        if (backupWord && backupWord !== query) {
+            searchStep(backupWord, null, doneFn);
+            return;
+        }
+        doneFn('По запросу «' + query + '» точной статьи не нашлось. Попробуй другое слово!');
     };
-    s.onerror = function() { done('Нет связи с базой.'); };
-    s.src = 'https://wikipedia.org' + encodeURIComponent(cq) + '&gsrlimit=1&prop=extracts&exintro=1&explaintext=1&format=json&callback=' + cb;
+    s.onerror = function() { doneFn('Нет связи с базой.'); };
+    s.src = 'https://wikipedia.org' + encodeURIComponent(query) + '&gsrlimit=1&prop=extracts&exintro=1&explaintext=1&format=json&callback=' + cb;
     document.body.appendChild(s);
-
-    setTimeout(function() {
-        done('По запросу «' + cq + '» быстрый поиск ничего не нашёл.');
-    }, 1200);
 }
 
 function send(e) {
@@ -204,7 +193,28 @@ function send(e) {
     c.m.push(bm);
     draw();
 
-    instantSearch(t, bm);
+    var cq = cleanQ(t);
+    var words = cq.split(' ');
+    var longest = '';
+    for (var i = 0; i !== words.length; i++) {
+        var w = getEl(words, i);
+        if (w.length > longest.length) longest = w;
+    }
+
+    var finished = false;
+    function finish(ans) {
+        if (finished) return;
+        finished = true;
+        bm.x = ans;
+        save();
+        draw();
+    }
+
+    searchStep(cq, longest, finish);
+
+    setTimeout(function() {
+        finish('По запросу «' + cq + '» ответ не успел загрузиться. Попробуй ещё раз!');
+    }, 3500);
 }
 
 draw();
