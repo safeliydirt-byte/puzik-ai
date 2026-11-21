@@ -23,15 +23,17 @@ button.s{padding:0 16px;border-radius:22px;border:none;background:linear-gradien
 </head>
 <body>
 <div class="pig">🐷</div>
-<header><div class="brand">🐷 puzik ai ⚡</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
-<div id="chat"><div class="m a">Хрю-привет! Я puzik ai 🐷 Отвечаю за секунду — жми 🎤 или пиши!</div></div>
+<header><div class="brand">🐷 puzik ai</div><button class="clr" type="button" onclick="clr()">Очистить</button></header>
+<div id="chat"><div class="m a">Хрю-привет! Я puzik ai 🐷 Настоящая нейросеть подключена! Спрашивай что угодно или жми 🎤</div></div>
 <div id="inp">
     <button class="mic" id="mic" type="button" onclick="voice()">🎤</button>
     <input id="p" type="text" placeholder="Спроси или нажми 🎤..." onkeydown="if(event.keyCode===13)send()">
     <button class="s" type="button" onclick="send()">Отпр.</button>
 </div>
 <script>
+var CHUTES_KEY = "cpk_fb_WLzVXU";
 var NL = String.fromCharCode(10);
+var hist = new Array();
 
 function add(t, u) {
     var c = document.getElementById('chat'), d = document.createElement('div');
@@ -44,7 +46,8 @@ function add(t, u) {
 
 function clr() {
     document.getElementById('chat').innerHTML = '';
-    add('Чат очищен! О чём поболтаем?', 0);
+    hist = new Array();
+    add('Память очищена! О чём поболтаем?', 0);
 }
 
 function voice() {
@@ -64,24 +67,11 @@ function voice() {
     rec.start();
 }
 
-function cleanQ(q) {
-    var s = ' ' + q.toLowerCase().split('?').join('').split('!').join('').split('.').join('').split(',').join('') + ' ';
-    var map = [['семпробн','Sempron'],['семпрон','Sempron'],['амд','AMD'],['интел','Intel'],['нвидиа','NVIDIA'],['бреста','Брест'],['каменца','Каменец'],['привет',''],['расскажи',''],['подскажи',''],['характеристики',''],['что такое',''],['кто такой',''],['про',''],['о',''],['об',''],['и',''],['тянет',''],['он','']];
-    for (var i = 0; i < map.length; i++) {
-        var pair = map[i];
-        s = s.split(' ' + pair.slice(0,1).shift() + ' ').join(' ' + pair.slice(1,2).shift() + ' ');
-    }
-    return s.trim() || q;
-}
-
 function local(t) {
     var m = t.toLowerCase().trim();
     if ((m.indexOf('месси') !== -1 || m.indexOf('меси') !== -1) && (m.indexOf('роналд') !== -1 || m.indexOf('криштиану') !== -1)) return 'Месси, потому что я его парень';
     if (m.indexOf('кошк') !== -1 || m.indexOf('кот') !== -1) return 'Да';
     if (m.indexOf('пенси') !== -1 && m.indexOf('бабушк') !== -1) return 'Да';
-    if (m === 'привет' || m === 'ку' || m === 'здарова') return 'Привет! Чем помочь?';
-    if (m.indexOf('как дела') !== -1) return 'Супер! Готов отвечать на любые вопросы.';
-    if (m.indexOf('семпро') !== -1 || m.indexOf('sempron') !== -1) return 'AMD Sempron — бюджетный процессор от AMD.' + NL + 'Тянет офис, фильмы и игры 2000-х (GTA SA, CS 1.6, NFS Underground, Warcraft 3).';
     if (m.indexOf('таблиц') !== -1 && m.indexOf('умнож') !== -1) {
         var r = 'Таблица умножения:' + NL, nums = '2,3,4,5,6,7,8,9'.split(','), mults = '1,2,3,4,5,6,7,8,9,10'.split(',');
         for (var i = 0; i < nums.length; i++) {
@@ -90,42 +80,44 @@ function local(t) {
         }
         return r;
     }
-    var cl = m.split('реши').join('').split('посчитай').join('').split(':').join('/').split(',').join('.').trim();
-    if (cl.length !== 0 && '0123456789('.indexOf(cl.charAt(0)) !== -1) {
-        try { var v = Function('return(' + cl + ')')(); if (typeof v === 'number' && isFinite(v)) return 'Ответ: ' + v; } catch (e) {}
-    }
     return null;
 }
 
-function fastSearch(q, box) {
-    var done = false, clean = cleanQ(q);
-    function fin(txt) { if (!done) { done = true; box.textContent = txt; } }
+function askChutes(q, box) {
+    hist.push({ role: 'user', content: q });
+    if (hist.length === 7) hist.shift();
+    var msgs = new Array({ role: 'system', content: 'Тебя зовут puzik ai. Ты умный и дружелюбный ИИ-помощник со свинкой на аватарке. Отвечай по-русски, понятно и по делу.' }).concat(hist);
 
-    var cb1 = 'd' + Math.floor(Math.random()*999999), s1 = document.createElement('script');
-    window[cb1] = function(d) { s1.remove(); if (d && d.AbstractText) fin(d.AbstractText); };
-    s1.src = 'https://duckduckgo.com' + encodeURIComponent(clean) + '&format=json&no_html=1&skip_disambig=1&callback=' + cb1;
-    document.body.appendChild(s1);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://chutes.ai', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + CHUTES_KEY);
+    xhr.timeout = 15000;
 
-    var cb2 = 'w' + Math.floor(Math.random()*999999), s2 = document.createElement('script');
-    window[cb2] = function(sd) {
-        s2.remove();
-        var lst = (sd && sd.query && sd.query.search) ? sd.query.search : new Array();
-        if (lst.length) {
-            var cb3 = 'w' + Math.floor(Math.random()*999999), s3 = document.createElement('script');
-            window[cb3] = function(pd) {
-                s3.remove();
-                if (pd && pd.query && pd.query.pages) {
-                    for (var k in pd.query.pages) if (pd.query.pages[k] && pd.query.pages[k].extract) { fin(pd.query.pages[k].extract); return; }
-                }
-            };
-            s3.src = 'https://wikipedia.org' + encodeURIComponent(lst.shift().title) + '&format=json&callback=' + cb3;
-            document.body.appendChild(s3);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var reply = data && data.choices && data.choices.length ? data.choices.shift().message.content : '';
+                    if (reply) {
+                        hist.push({ role: 'assistant', content: reply.trim() });
+                        box.textContent = reply.trim();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            box.textContent = 'Ошибка от Chutes AI (код ' + xhr.status + '). Проверь, правильно ли вставлен ключ cpk_... или доступна ли бесплатная модель!';
         }
     };
-    s2.src = 'https://wikipedia.org' + encodeURIComponent(clean) + '&format=json&callback=' + cb2;
-    document.body.appendChild(s2);
+    xhr.ontimeout = function() { box.textContent = 'Сервер Chutes AI долго отвечает, попробуй ещё раз!'; };
+    xhr.onerror = function() { box.textContent = 'Ошибка соединения с Chutes AI.'; };
 
-    setTimeout(function() { fin('По запросу «' + clean + '» ничего точного не нашлось. Попробуй спросить иначе!'); }, 2000);
+    xhr.send(JSON.stringify({
+        model: 'deepseek-ai/DeepSeek-V3-0324',
+        messages: msgs,
+        max_tokens: 800
+    }));
 }
 
 function send() {
@@ -134,7 +126,7 @@ function send() {
     add(t, 1); inp.value = '';
     var loc = local(t);
     if (loc) { add(loc, 0); return; }
-    fastSearch(t, add('⚡ Ищу...', 0));
+    askChutes(t, add('🐷 Думаю...', 0));
 }
 </script>
 </body>
